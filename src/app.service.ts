@@ -6,7 +6,7 @@ export interface IRootResponse {
 
 @Injectable()
 export class AppService {
-  getHello(): IRootResponse {
+  public getHello(): IRootResponse {
     return { message: 'Welcome to the eWallet API' };
   }
 }
