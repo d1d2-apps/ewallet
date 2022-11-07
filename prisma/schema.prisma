@@ -11,13 +11,25 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  picture   String?
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String
+  picture             String?
+  email               String               @unique
+  password            String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now()) @updatedAt
+  resetPasswordTokens ResetPasswordToken[]
 
   @@map("users")
+}
+
+model ResetPasswordToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid
+  expiresIn DateTime
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("reset_password_tokens")
 }
