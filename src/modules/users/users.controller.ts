@@ -37,5 +37,5 @@ export class UsersController {
     return this.users.delete(param.id);
   }
 
-  // TODO add upload picture endpoint and then go to auth module
+  // TODO add upload picture endpoint
 }
