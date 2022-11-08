@@ -1,15 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { plainToClass, plainToInstance } from 'class-transformer';
-import { PrismaService } from 'src/shared/database/prisma.service';
+
+import { FirebaseStorageProvider } from '@src/shared/providers/storage/firebase-storage.provider';
 import { BCryptHashProvider } from 'src/shared/providers/hash/bcrypt-hash.provider';
+import { PrismaService } from 'src/shared/database/prisma.service';
+
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+
 import { UserModel } from './models/user.model';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService, private hashProvider: BCryptHashProvider) {}
+  constructor(private prisma: PrismaService, private hashProvider: BCryptHashProvider, private storageProvider: FirebaseStorageProvider) {}
 
   public async findAll(): Promise<UserModel[]> {
     const users = await this.prisma.user.findMany();
@@ -96,6 +100,26 @@ export class UsersService {
     const hashedPassword = await this.hashProvider.generateHash(data.password);
 
     await this.prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+  }
+
+  public async uploadPicture(id: string, file: Express.Multer.File): Promise<UserModel> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    const folder = process.env.USERS_AVATARS_FOLDER;
+
+    if (!user) {
+      throw new NotFoundException(`User not found with id [${id}]`);
+    }
+
+    if (user.picture) {
+      await this.storageProvider.deleteFile(user.picture);
+    }
+
+    const uploadResult = await this.storageProvider.uploadFile(file, folder, user.id);
+
+    const updatedUser = await this.prisma.user.update({ where: { id }, data: { picture: uploadResult.fileURL } });
+
+    return plainToClass(UserModel, updatedUser);
   }
 
   public async delete(id: string): Promise<void> {

@@ -1,5 +1,6 @@
 import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { Injectable } from '@nestjs/common';
+
 import { IStorageProvider, IUploadResult } from './storage-provider.model';
 
 @Injectable()
@@ -17,10 +18,10 @@ export class FirebaseStorageProvider implements IStorageProvider {
     return { fileName: uploaded.metadata.name, fileURL };
   }
 
-  public async deleteFile(path: string, fileName: string): Promise<void> {
+  public async deleteFile(fileURL: string): Promise<void> {
     const storage = getStorage();
 
-    const fileRef = ref(storage, `${path}/${fileName}`);
+    const fileRef = ref(storage, fileURL);
 
     await deleteObject(fileRef);
   }
