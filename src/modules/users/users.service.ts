@@ -125,6 +125,6 @@ export class UsersService {
   public async delete(id: string): Promise<void> {
     const user = await this.findById(id);
 
-    await this.prisma.user.delete({ where: { id: user.id } });
+    await this.prisma.user.delete({ where: { id: user.id }, include: { resetPasswordTokens: true } });
   }
 }
