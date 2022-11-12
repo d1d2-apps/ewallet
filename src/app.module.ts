@@ -3,23 +3,25 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { UsersController } from './modules/users/users.controller';
+import { DebtorsController } from './modules/debtors/debtors.controller';
 
 import { AppService } from './app.service';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { DebtorsModule } from './modules/debtors/debtors.module';
 
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 import { EnsureOwnUserMiddleware } from './modules/users/middlewares/ensure-own-user.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule],
+  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, DebtorsModule],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(EnsureAuthenticatedMiddleware).forRoutes(UsersController);
+    consumer.apply(EnsureAuthenticatedMiddleware).forRoutes(UsersController, DebtorsController);
 
     consumer
       .apply(EnsureOwnUserMiddleware)
