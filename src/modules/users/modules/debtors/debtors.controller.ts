@@ -16,25 +16,18 @@ class IdParam {
   id: string;
 }
 
-class UserIdParam {
-  @IsString()
-  @IsUUID()
-  @IsNotEmpty()
-  userId: string;
-}
-
-@Controller('debtors')
+@Controller('/users/debtors')
 export class DebtorsController {
   constructor(private debtors: DebtorsService) {}
+
+  @Get()
+  public async findByUserId(@Req() req: Request): Promise<DebtorModel[]> {
+    return this.debtors.findByUserId(req.user.id);
+  }
 
   @Get(':id')
   public async findById(@Param() param: IdParam): Promise<DebtorModel> {
     return this.debtors.findById(param.id);
-  }
-
-  @Get('/users/:userId')
-  public async findByUserId(@Param() param: UserIdParam): Promise<DebtorModel[]> {
-    return this.debtors.findByUserId(param.userId);
   }
 
   @Post()

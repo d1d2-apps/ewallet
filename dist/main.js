@@ -8,7 +8,7 @@ const firebase_config_1 = require("./config/firebase.config");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.useGlobalPipes(new common_1.ValidationPipe());
-    await app.listen(3333);
+    await app.listen(process.env.PORT || 3333);
 }
 bootstrap();
 //# sourceMappingURL=main.js.map

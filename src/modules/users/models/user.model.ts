@@ -1,4 +1,4 @@
-import { DebtorModel } from '@src/modules/debtors/models/debtor.model';
+import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
 import { Exclude, Expose } from 'class-transformer';
 
 export class UserModel {

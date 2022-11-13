@@ -3,19 +3,18 @@ import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { UsersController } from './modules/users/users.controller';
-import { DebtorsController } from './modules/debtors/debtors.controller';
+import { DebtorsController } from './modules/users/modules/debtors/debtors.controller';
 
 import { AppService } from './app.service';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
-import { DebtorsModule } from './modules/debtors/debtors.module';
 
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 import { EnsureOwnUserMiddleware } from './modules/users/middlewares/ensure-own-user.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, DebtorsModule],
+  imports: [ConfigModule.forRoot(), UsersModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
