@@ -7,7 +7,18 @@ const firebase_config_1 = require("./config/firebase.config");
 (0, firebase_config_1.initializeFirebaseApp)();
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.useGlobalPipes(new common_1.ValidationPipe());
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        whitelist: true,
+        transform: true,
+        transformOptions: { enableImplicitConversion: true },
+    }));
+    const whitelist = ['http://localhost:3000'];
+    app.enableCors({
+        credentials: true,
+        optionsSuccessStatus: 204,
+        origin: whitelist,
+        methods: 'GET, POST, PUT, DELETE, UPDATE, OPTIONS',
+    });
     await app.listen(process.env.PORT || 3333);
 }
 bootstrap();
