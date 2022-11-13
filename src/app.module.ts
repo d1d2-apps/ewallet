@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { UsersController } from './modules/users/users.controller';
 import { DebtorsController } from './modules/users/modules/debtors/debtors.controller';
+import { CreditCardsController } from './modules/users/modules/credit-cards/credit-cards.controller';
 
 import { AppService } from './app.service';
 
@@ -20,7 +21,7 @@ import { EnsureOwnUserMiddleware } from './modules/users/middlewares/ensure-own-
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(EnsureAuthenticatedMiddleware).forRoutes(UsersController, DebtorsController);
+    consumer.apply(EnsureAuthenticatedMiddleware).forRoutes(UsersController, DebtorsController, CreditCardsController);
 
     consumer
       .apply(EnsureOwnUserMiddleware)

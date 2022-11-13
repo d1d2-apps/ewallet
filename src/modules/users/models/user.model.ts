@@ -1,5 +1,6 @@
 import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
 import { Exclude, Expose } from 'class-transformer';
+import { CreditCardModel } from '../modules/credit-cards/models/credit-card.model';
 
 export class UserModel {
   @Expose()
@@ -25,4 +26,7 @@ export class UserModel {
 
   @Expose()
   debtors?: DebtorModel[];
+
+  @Expose()
+  creditCards?: CreditCardModel[];
 }
