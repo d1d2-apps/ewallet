@@ -18,7 +18,7 @@ async function bootstrap() {
     }),
   );
 
-  const whitelist = ['http://localhost:3000'];
+  const whitelist = ['http://localhost:5173'];
 
   app.enableCors({
     credentials: true,
