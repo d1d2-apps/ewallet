@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Param, Patch, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
+import { Request } from 'express';
 
 import { UsersService } from './users.service';
 
@@ -20,6 +21,11 @@ class IdParam {
 @Controller('users')
 export class UsersController {
   constructor(private users: UsersService) {}
+
+  @Get('me')
+  public async getMe(@Req() req: Request): Promise<UserModel> {
+    return this.users.findById(req.user.id);
+  }
 
   @Post()
   public async create(@Body() createUserDto: CreateUserDto): Promise<UserModel> {
