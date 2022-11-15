@@ -12,7 +12,7 @@ async function bootstrap() {
         transform: true,
         transformOptions: { enableImplicitConversion: true },
     }));
-    const whitelist = ['http://localhost:3000'];
+    const whitelist = ['http://localhost:5173'];
     app.enableCors({
         credentials: true,
         optionsSuccessStatus: 204,
