@@ -13,9 +13,10 @@ import { UsersModule } from './modules/users/users.module';
 
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 import { EnsureOwnUserMiddleware } from './modules/users/middlewares/ensure-own-user.middleware';
+import { BillsModule } from './modules/bills/bills.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule],
+  imports: [ConfigModule.forRoot(), UsersModule, AuthModule, BillsModule],
   controllers: [AppController],
   providers: [AppService],
 })
