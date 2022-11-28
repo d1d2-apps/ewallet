@@ -1,22 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Put, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
 
 import { UsersService } from './users.service';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
-import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 
 import { UserModel } from './models/user.model';
-
-class IdParam {
-  @IsString()
-  @IsUUID()
-  @IsNotEmpty()
-  id: string;
-}
 
 @Controller('users')
 export class UsersController {
@@ -27,29 +18,24 @@ export class UsersController {
     return this.users.findById(req.user.id);
   }
 
-  @Post()
-  public async create(@Body() createUserDto: CreateUserDto): Promise<UserModel> {
-    return this.users.create(createUserDto);
+  @Put('profile')
+  public async update(@Req() req: Request, @Body() updateUserDto: UpdateUserDto): Promise<UserModel> {
+    return this.users.update(req.user.id, updateUserDto);
   }
 
-  @Put(':id')
-  public async update(@Param() param: IdParam, @Body() updateUserDto: UpdateUserDto): Promise<UserModel> {
-    return this.users.update(param.id, updateUserDto);
+  @Patch('account/password')
+  public async changePassword(@Req() req: Request, @Body() changePasswordDto: ChangePasswordDto): Promise<void> {
+    return this.users.changePassword(req.user.id, changePasswordDto);
   }
 
-  @Patch(':id/password')
-  public async changePassword(@Param() param: IdParam, @Body() changePasswordDto: ChangePasswordDto): Promise<void> {
-    return this.users.changePassword(param.id, changePasswordDto);
-  }
-
-  @Patch(':id/picture')
+  @Patch('profile/picture')
   @UseInterceptors(FileInterceptor('file'))
-  public async uploadPicture(@Param() param: IdParam, @UploadedFile() file: Express.Multer.File): Promise<UserModel> {
-    return this.users.uploadPicture(param.id, file);
+  public async uploadPicture(@Req() req: Request, @UploadedFile() file: Express.Multer.File): Promise<UserModel> {
+    return this.users.uploadPicture(req.user.id, file);
   }
 
-  @Delete(':id')
-  public async delete(@Param() param: IdParam): Promise<void> {
-    return this.users.delete(param.id);
+  @Delete('account')
+  public async delete(@Req() req: Request): Promise<void> {
+    return this.users.delete(req.user.id);
   }
 }
