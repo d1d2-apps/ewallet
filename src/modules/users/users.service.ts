@@ -68,7 +68,7 @@ export class UsersService {
   public async update(id: string, data: UpdateUserDto): Promise<UserModel> {
     const user = await this.findById(id);
 
-    if (data.email) {
+    if (data.email && data.email !== user.email) {
       const userWithEmail = await this.prisma.user.findUnique({ where: { email: data.email } });
 
       if (userWithEmail) {
