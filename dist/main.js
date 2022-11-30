@@ -12,12 +12,12 @@ async function bootstrap() {
         transform: true,
         transformOptions: { enableImplicitConversion: true },
     }));
-    const whitelist = ['http://localhost:5173'];
+    const whitelist = ['http://localhost:5173', 'http://192.168.1.114:5173'];
     app.enableCors({
         credentials: true,
         optionsSuccessStatus: 204,
         origin: whitelist,
-        methods: 'GET, POST, PUT, DELETE, UPDATE, OPTIONS',
+        methods: 'GET, POST, PUT, PATCH, DELETE, UPDATE, OPTIONS',
     });
     await app.listen(process.env.PORT || 3333);
 }
