@@ -24,7 +24,7 @@ async function bootstrap() {
     credentials: true,
     optionsSuccessStatus: 204,
     origin: whitelist,
-    methods: 'GET, POST, PUT, DELETE, UPDATE, OPTIONS',
+    methods: 'GET, POST, PUT, PATCH, DELETE, UPDATE, OPTIONS',
   });
 
   await app.listen(process.env.PORT || 3333);
