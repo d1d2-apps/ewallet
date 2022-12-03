@@ -1,5 +1,18 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsDateString, IsDefined, IsEnum, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsDefined,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 import { BillCategory } from '../models/bill.model';
 import { CreateBillDebtorDto } from './create-bill-debtor.dto';
@@ -12,6 +25,8 @@ export class CreateBillDto {
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(1)
+  @Max(12)
   month: number;
 
   @IsNumber()
