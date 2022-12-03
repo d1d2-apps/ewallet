@@ -85,7 +85,11 @@ export class UsersService {
   }
 
   public async changePassword(id: string, data: ChangePasswordDto): Promise<void> {
-    const user = await this.findById(id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException(`User not found with id [${id}]`);
+    }
 
     const oldPasswordMatch = await this.hashProvider.compareHash(data.oldPassword, user.password);
 
