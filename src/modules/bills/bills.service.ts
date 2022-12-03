@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToClass, plainToInstance } from 'class-transformer';
 
 import { PrismaService } from '@src/shared/database/prisma.service';
@@ -18,7 +18,13 @@ export class BillsService {
     await this.creditCards.findById(data.creditCardId);
 
     const billDebtorsData = data.billDebtors;
-    const billDebtorsIds = billDebtorsData.map((debtor) => debtor.debtorId);
+
+    const debtorsUsersIds = billDebtorsData.filter((debtor) => debtor.userId).map((debtor) => debtor.userId);
+    if (debtorsUsersIds.some((id) => id !== userId)) {
+      throw new BadRequestException("You can't register a bill for another user");
+    }
+
+    const billDebtorsIds = billDebtorsData.filter((debtor) => debtor.debtorId).map((debtor) => debtor.debtorId);
 
     const checkIfDebtorsExistPromises = billDebtorsIds.map((id) => this.debtors.findById(id));
     await Promise.all(checkIfDebtorsExistPromises);
