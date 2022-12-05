@@ -7,6 +7,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   IsUUID,
   Max,
@@ -17,7 +18,7 @@ import {
 import { BillCategory } from '../models/bill.model';
 import { CreateBillDebtorDto } from './create-bill-debtor.dto';
 
-export class CreateBillDto {
+export class BillDto {
   @IsUUID()
   @IsString()
   @IsNotEmpty()
@@ -67,4 +68,19 @@ export class CreateBillDto {
   @ValidateNested()
   @Type(() => CreateBillDebtorDto)
   billDebtors!: CreateBillDebtorDto[];
+}
+
+export class CreateBillDto {
+  @IsDefined()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BillDto)
+  bill?: BillDto;
+
+  @IsDefined()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested()
+  @Type(() => BillDto)
+  bills?: BillDto[];
 }

@@ -10,7 +10,7 @@ export class BillsController {
   constructor(private bills: BillsService) {}
 
   @Post()
-  public async createBill(@Body() createBillDto: CreateBillDto, @Req() req: Request): Promise<BillModel> {
-    return this.bills.createBill(req.user.id, createBillDto);
+  public async createBill(@Body() createBillDto: CreateBillDto, @Req() req: Request): Promise<BillModel | BillModel[]> {
+    return this.bills.create(req.user.id, createBillDto);
   }
 }

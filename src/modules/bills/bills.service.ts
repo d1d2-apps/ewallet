@@ -5,7 +5,7 @@ import { PrismaService } from '@src/shared/database/prisma.service';
 import { CreditCardsService } from '../users/modules/credit-cards/credit-cards.service';
 import { DebtorsService } from '../users/modules/debtors/debtors.service';
 
-import { CreateBillDto } from './dtos/create-bill.dto';
+import { BillDto, CreateBillDto } from './dtos/create-bill.dto';
 
 import { BillDebtorModel } from './models/bill-debtor.model';
 import { BillModel } from './models/bill.model';
@@ -14,7 +14,22 @@ import { BillModel } from './models/bill.model';
 export class BillsService {
   constructor(private prisma: PrismaService, private creditCards: CreditCardsService, private debtors: DebtorsService) {}
 
-  public async createBill(userId: string, data: CreateBillDto): Promise<BillModel> {
+  public async create(userId: string, data: CreateBillDto): Promise<BillModel | BillModel[]> {
+    if (!data.bill && !data.bills?.length) {
+      throw new BadRequestException('You need to send a bill object or a bills array');
+    }
+
+    if (data.bill) {
+      return this.createBill(userId, data.bill);
+    }
+
+    if (data.bills?.length) {
+      const createBillsPromises = data.bills.map((billDto) => this.createBill(userId, billDto));
+      return Promise.all(createBillsPromises);
+    }
+  }
+
+  private async createBill(userId: string, data: BillDto): Promise<BillModel> {
     await this.creditCards.findById(data.creditCardId);
 
     const billDebtorsData = data.billDebtors;
