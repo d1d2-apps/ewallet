@@ -7,6 +7,7 @@ export class AppController {
 
   @Get()
   public getHello(): IRootResponse {
+    console.log(process.env.AUTH_SECRET);
     return this.appService.getHello();
   }
 }

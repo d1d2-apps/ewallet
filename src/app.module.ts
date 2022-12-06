@@ -13,8 +13,17 @@ import { UsersModule } from './modules/users/users.module';
 
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 
+const ENV = process.env.NODE_ENV;
+
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: [ENV ? `.env.${ENV}` : '.env'],
+      isGlobal: true,
+    }),
+    UsersModule,
+    AuthModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
