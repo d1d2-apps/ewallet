@@ -1,5 +1,4 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { UsersController } from './modules/users/users.controller';
@@ -14,7 +13,7 @@ import { UsersModule } from './modules/users/users.module';
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot(), UsersModule, AuthModule],
+  imports: [UsersModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
