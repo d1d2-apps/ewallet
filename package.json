@@ -8,19 +8,19 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "postinstall": "prisma generate && nest build",
+
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:test": "dotenv -e .env.test nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "postinstall": "prisma generate && nest build",
+    "start:prod": "dotenv -e .env.prod node dist/main",
+
+    "test:cov": "dotenv -e .env.test jest --coverage --forceExit",
+    "test:e2e": "dotenv -e .env.test jest --testRegex='.*\\e2e.spec\\.ts$' --silent --noStackTrace --passWithNoTests --forceExit",
+
     "migrate:dev": "npx prisma migrate dev",
     "migrate:test": "dotenv -e .env.test npx prisma migrate dev"
   },
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
-    "@nestjs/testing": "^9.0.0",
+    "@nestjs/testing": "^9.2.1",
     "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.13",
     "@types/jest": "28.1.8",
@@ -73,13 +73,16 @@
     "typescript": "^4.7.4"
   },
   "jest": {
+    "testTimeout": 10000,
+    "moduleNameMapper": {
+      "^@src/(.*)$": "<rootDir>/$1"
+    },
     "moduleFileExtensions": [
       "js",
       "json",
       "ts"
     ],
     "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
