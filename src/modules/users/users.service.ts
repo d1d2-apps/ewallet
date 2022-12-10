@@ -2,8 +2,8 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { plainToClass, plainToInstance } from 'class-transformer';
 
 import { FirebaseStorageProvider } from '@src/shared/providers/storage/firebase-storage.provider';
-import { BCryptHashProvider } from 'src/shared/providers/hash/bcrypt-hash.provider';
-import { PrismaService } from 'src/shared/database/prisma.service';
+import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
+import { PrismaService } from '@src/shared/database/prisma.service';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
