@@ -1,5 +1,4 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 
 import { AppController } from './app.controller';
 import { UsersController } from './modules/users/users.controller';
@@ -13,17 +12,8 @@ import { UsersModule } from './modules/users/users.module';
 
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
 
-const ENV = process.env.NODE_ENV;
-
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      envFilePath: [ENV ? `.env.${ENV}` : '.env'],
-      isGlobal: true,
-    }),
-    UsersModule,
-    AuthModule,
-  ],
+  imports: [UsersModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
