@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class ResetPasswordToken {
+export class ResetPasswordTokenModel {
   @Expose()
   id: string;
 
