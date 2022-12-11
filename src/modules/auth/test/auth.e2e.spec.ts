@@ -16,6 +16,7 @@ const chance = new Chance();
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
+  let api: request.SuperTest<request.Test>;
 
   let prisma: PrismaService;
   let usersService: UsersService;
@@ -37,6 +38,8 @@ describe('AuthController (e2e)', () => {
 
     await app.init();
 
+    api = request(app.getHttpServer());
+
     usersService = module.get<UsersService>(UsersService);
     prisma = module.get<PrismaService>(PrismaService);
   });
@@ -45,6 +48,66 @@ describe('AuthController (e2e)', () => {
     await prisma.user.deleteMany();
 
     await app.close();
+  });
+
+  describe('sign in', () => {
+    let user: UserModel;
+
+    beforeAll(async () => {
+      user = await usersService.create({
+        email: 'user@ewallet.com',
+        name: 'Fake eWallet User',
+        password: '123456',
+        passwordConfirmation: '123456',
+      });
+    });
+
+    afterAll(async () => {
+      await usersService.delete(user.id);
+    });
+
+    it('should raise 400 for no data', async () => {
+      const response = await api.post('/auth/sign-in').send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockSignInErrorMessage);
+    });
+
+    it('should raise 400 for wrong email address', async () => {
+      const credentials = {
+        email: 'non.existing.email@ewallet.com',
+        password: 'fake-password',
+      };
+
+      const response = await api.post('/auth/sign-in').send(credentials).expect(400);
+
+      expect(response.body.message).toStrictEqual('Incorrect email/paswword combination');
+    });
+
+    it('should raise 400 for wrong password', async () => {
+      const credentials = {
+        email: user.email,
+        password: 'wrong-password',
+      };
+
+      const response = await api.post('/auth/sign-in').send(credentials).expect(400);
+
+      expect(response.body.message).toStrictEqual('Incorrect email/paswword combination');
+    });
+
+    it('should authenticate user', async () => {
+      const credentials = {
+        email: user.email,
+        password: '123456',
+      };
+
+      const response = await api.post('/auth/sign-in').send(credentials).expect(201);
+
+      expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('user.id');
+      expect(response.body).not.toHaveProperty('user.password');
+      expect(response.body).toHaveProperty('token');
+      expect(response.body.user.email).toStrictEqual(user.email);
+    });
   });
 
   describe('sign up', () => {
@@ -64,7 +127,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should raise 400 for no data', async () => {
-      const response = await request(app.getHttpServer()).post('/auth/sign-up').send(undefined).expect(400);
+      const response = await api.post('/auth/sign-up').send(undefined).expect(400);
 
       expect(response.body.message).toStrictEqual(mockSignUpErrorMessage);
     });
@@ -77,7 +140,7 @@ describe('AuthController (e2e)', () => {
         passwordConfirmation: 'new-user-password',
       };
 
-      const response = await request(app.getHttpServer()).post('/auth/sign-up').send(data).expect(400);
+      const response = await api.post('/auth/sign-up').send(data).expect(400);
 
       expect(response.body.message).toStrictEqual(`The provided email [${data.email}] is already in use`);
     });
@@ -90,7 +153,7 @@ describe('AuthController (e2e)', () => {
         passwordConfirmation: chance.string({ length: 10 }),
       };
 
-      const response = await request(app.getHttpServer()).post('/auth/sign-up').send(data).expect(400);
+      const response = await api.post('/auth/sign-up').send(data).expect(400);
 
       expect(response.body.message).toStrictEqual('Password and password confirmation do not match');
     });
@@ -105,7 +168,7 @@ describe('AuthController (e2e)', () => {
         passwordConfirmation: newPassword,
       };
 
-      const response = await request(app.getHttpServer()).post('/auth/sign-up').send(data).expect(201);
+      const response = await api.post('/auth/sign-up').send(data).expect(201);
 
       expect(response.body).toHaveProperty('user');
       expect(response.body).toHaveProperty('user.id');
@@ -113,14 +176,6 @@ describe('AuthController (e2e)', () => {
       expect(response.body).toHaveProperty('token');
       expect(response.body.user.name).toStrictEqual(data.name);
       expect(response.body.user.email).toStrictEqual(data.email);
-    });
-  });
-
-  describe('sign in', () => {
-    it('should raise 400 for no data', async () => {
-      const response = await request(app.getHttpServer()).post('/auth/sign-in').send(undefined).expect(400);
-
-      expect(response.body.message).toStrictEqual(mockSignInErrorMessage);
     });
   });
 });

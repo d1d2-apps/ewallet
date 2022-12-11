@@ -6,6 +6,7 @@ import { AppModule } from '@src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let api: request.SuperTest<request.Test>;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -23,6 +24,8 @@ describe('AppController (e2e)', () => {
     );
 
     await app.init();
+
+    api = request(app.getHttpServer());
   });
 
   afterAll(async () => {
@@ -31,7 +34,7 @@ describe('AppController (e2e)', () => {
 
   describe('root', () => {
     it('should return welcome message', () => {
-      return request(app.getHttpServer()).get('/').expect(200).expect({ message: 'Welcome to the eWallet API' });
+      return api.get('/').expect(200).expect({ message: 'Welcome to the eWallet API' });
     });
   });
 });
