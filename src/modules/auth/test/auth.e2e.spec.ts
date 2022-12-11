@@ -2,15 +2,19 @@ import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Chance } from 'chance';
+import { subMinutes } from 'date-fns';
 
 import { mockSignInErrorMessage, mockSignUpErrorMessage } from './mocks/auth-responses.mock';
 
 import { AppModule } from '@src/app.module';
 
 import { UserModel } from '@src/modules/users/models/user.model';
+import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
 
 import { UsersService } from '@src/modules/users/users.service';
+import { AuthService } from '@src/modules/auth/auth.service';
 import { PrismaService } from '@src/shared/database/prisma.service';
+import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
 
 const chance = new Chance();
 
@@ -20,6 +24,8 @@ describe('AuthController (e2e)', () => {
 
   let prisma: PrismaService;
   let usersService: UsersService;
+  let authService: AuthService;
+  let bcryptHashProvider: BCryptHashProvider;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -40,12 +46,15 @@ describe('AuthController (e2e)', () => {
 
     api = request(app.getHttpServer());
 
-    usersService = module.get<UsersService>(UsersService);
     prisma = module.get<PrismaService>(PrismaService);
+    usersService = module.get<UsersService>(UsersService);
+    authService = module.get<AuthService>(AuthService);
+    bcryptHashProvider = module.get<BCryptHashProvider>(BCryptHashProvider);
   });
 
   afterAll(async () => {
     await prisma.user.deleteMany();
+    await prisma.resetPasswordToken.deleteMany();
 
     await app.close();
   });
@@ -176,6 +185,87 @@ describe('AuthController (e2e)', () => {
       expect(response.body).toHaveProperty('token');
       expect(response.body.user.name).toStrictEqual(data.name);
       expect(response.body.user.email).toStrictEqual(data.email);
+    });
+  });
+
+  describe('reset-password', () => {
+    let user: UserModel;
+    let userResetPasswordToken: ResetPasswordTokenModel;
+    let userExpiredResetPasswordToken: ResetPasswordTokenModel;
+
+    beforeAll(async () => {
+      user = await usersService.create({
+        email: 'user@ewallet.com',
+        name: 'Fake eWallet User',
+        password: '123456',
+        passwordConfirmation: '123456',
+      });
+
+      userExpiredResetPasswordToken = await prisma.resetPasswordToken.create({
+        data: {
+          userId: user.id,
+          active: true,
+          expiresIn: subMinutes(new Date(), Number(process.env.RESET_PASSWORD_TOKEN_EXPIRES_IN) + 2).toISOString(),
+        },
+      });
+
+      userResetPasswordToken = await authService.generateResetPasswordToken(user.id);
+    });
+
+    afterAll(async () => {
+      await usersService.delete(user.id);
+    });
+
+    it('should raise 400 for password not matching', async () => {
+      const data = {
+        token: userResetPasswordToken.id,
+        password: 'new-password',
+        passwordConfirmation: 'not-matching-password',
+      };
+
+      const response = await api.post('/auth/reset-password').send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('Password and password confirmation do not match');
+    });
+
+    it('should raise 400 for wrong reset token', async () => {
+      const data = {
+        token: chance.guid(),
+        password: 'new-password',
+        passwordConfirmation: 'new-password',
+      };
+
+      const response = await api.post('/auth/reset-password').send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('Invalid reset password token');
+    });
+
+    it('should raise 400 for expired reset token', async () => {
+      const data = {
+        token: userExpiredResetPasswordToken.id,
+        password: 'new-password',
+        passwordConfirmation: 'new-password',
+      };
+
+      const response = await api.post('/auth/reset-password').send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('Reset password token is expired');
+    });
+
+    it("should reset user's password", async () => {
+      const data = {
+        token: userResetPasswordToken.id,
+        password: 'new-password',
+        passwordConfirmation: 'new-password',
+      };
+
+      await api.post('/auth/reset-password').send(data).expect(201);
+
+      const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
+
+      const passwordMatched = await bcryptHashProvider.compareHash(data.password, updatedUser.password);
+
+      expect(passwordMatched).toStrictEqual(true);
     });
   });
 });
