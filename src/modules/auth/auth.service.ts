@@ -5,8 +5,8 @@ import { addMinutes, isAfter } from 'date-fns';
 
 import { authConfig } from '@src/config/auth.config';
 
-import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
-import { SendInBlueMailProvider } from '@src/shared/providers/mail/send-in-blue-mail.provider';
+import { MailProvider } from '@src/shared/providers/mail/implementations/mail.provider';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
 
 import { PrismaService } from '@src/shared/database/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -16,7 +16,7 @@ import { CreateUserDto } from '../users/dtos/create-user.dto';
 import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 
-import { IEmailData } from '@src/shared/providers/mail/mail.provider';
+import { IEmailData } from '@src/shared/providers/mail/models/mail-provider.model';
 
 import { parseForgotPasswordEmailTemplate } from './mjml-templates/forgot-password.template';
 
@@ -33,8 +33,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private userService: UsersService,
-    private hashProvider: BCryptHashProvider,
-    private mailProvider: SendInBlueMailProvider,
+    private hashProvider: HashProvider,
+    private mailProvider: MailProvider,
   ) {}
 
   public async authenticate(credentials: AuthenticateDto): Promise<IAuthResponse> {

@@ -14,7 +14,7 @@ import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
 import { UsersService } from '@src/modules/users/users.service';
 import { AuthService } from '@src/modules/auth/auth.service';
 import { PrismaService } from '@src/shared/database/prisma.service';
-import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
 
 const chance = new Chance();
 
@@ -25,7 +25,7 @@ describe('AuthController (e2e)', () => {
   let prisma: PrismaService;
   let usersService: UsersService;
   let authService: AuthService;
-  let bcryptHashProvider: BCryptHashProvider;
+  let hashProvider: HashProvider;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -49,7 +49,7 @@ describe('AuthController (e2e)', () => {
     prisma = module.get<PrismaService>(PrismaService);
     usersService = module.get<UsersService>(UsersService);
     authService = module.get<AuthService>(AuthService);
-    bcryptHashProvider = module.get<BCryptHashProvider>(BCryptHashProvider);
+    hashProvider = module.get<HashProvider>(HashProvider);
   });
 
   afterAll(async () => {
@@ -213,6 +213,7 @@ describe('AuthController (e2e)', () => {
     });
 
     afterAll(async () => {
+      await prisma.resetPasswordToken.deleteMany();
       await usersService.delete(user.id);
     });
 
@@ -263,9 +264,26 @@ describe('AuthController (e2e)', () => {
 
       const updatedUser = await prisma.user.findUnique({ where: { id: user.id } });
 
-      const passwordMatched = await bcryptHashProvider.compareHash(data.password, updatedUser.password);
+      const passwordMatched = await hashProvider.compareHash(data.password, updatedUser.password);
 
       expect(passwordMatched).toStrictEqual(true);
     });
   });
+
+  // describe('forgot-password', () => {
+  //   let user: UserModel;
+
+  //   beforeAll(async () => {
+  //     user = await usersService.create({
+  //       email: 'user@ewallet.com',
+  //       name: 'Fake eWallet User',
+  //       password: '123456',
+  //       passwordConfirmation: '123456',
+  //     });
+  //   });
+
+  //   afterAll(async () => {
+  //     await usersService.delete(user.id);
+  //   });
+  // });
 });

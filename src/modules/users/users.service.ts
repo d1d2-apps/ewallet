@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { plainToClass, plainToInstance } from 'class-transformer';
 
-import { FirebaseStorageProvider } from '@src/shared/providers/storage/firebase-storage.provider';
-import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
+import { StorageProvider } from '@src/shared/providers/storage/implementations/storage.provider';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
 import { PrismaService } from '@src/shared/database/prisma.service';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
@@ -13,7 +13,7 @@ import { UserModel } from './models/user.model';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService, private hashProvider: BCryptHashProvider, private storageProvider: FirebaseStorageProvider) {}
+  constructor(private prisma: PrismaService, private hashProvider: HashProvider, private storageProvider: StorageProvider) {}
 
   public async findAll(): Promise<UserModel[]> {
     const users = await this.prisma.user.findMany();

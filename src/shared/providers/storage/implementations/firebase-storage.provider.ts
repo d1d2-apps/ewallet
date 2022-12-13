@@ -1,7 +1,7 @@
 import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { Injectable } from '@nestjs/common';
 
-import { IStorageProvider, IUploadResult } from './storage-provider.model';
+import { IStorageProvider, IUploadResult } from '../models/storage-provider.model';
 
 @Injectable()
 export class FirebaseStorageProvider implements IStorageProvider {
