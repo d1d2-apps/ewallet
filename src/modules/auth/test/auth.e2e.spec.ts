@@ -4,7 +4,12 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Chance } from 'chance';
 import { subMinutes } from 'date-fns';
 
-import { mockSignInErrorMessage, mockSignUpErrorMessage } from './mocks/auth-responses.mock';
+import {
+  mockForgotPasswordErrorMessage,
+  mockResetPasswordErrorMessage,
+  mockSignInErrorMessage,
+  mockSignUpErrorMessage,
+} from './mocks/auth-responses.mock';
 
 import { AppModule } from '@src/app.module';
 
@@ -188,6 +193,41 @@ describe('AuthController (e2e)', () => {
     });
   });
 
+  describe('forgot-password', () => {
+    let user: UserModel;
+
+    beforeAll(async () => {
+      user = await usersService.create({
+        email: 'user@ewallet.com',
+        name: 'Fake eWallet User',
+        password: '123456',
+        passwordConfirmation: '123456',
+      });
+    });
+
+    afterAll(async () => {
+      await usersService.delete(user.id);
+    });
+
+    it('should raise 400 for no data', async () => {
+      const response = await api.post('/auth/forgot-password').send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockForgotPasswordErrorMessage);
+    });
+
+    it('should raise 404 for wrong email address', async () => {
+      const email = 'wrong.email@ewallet.com';
+
+      const response = await api.post('/auth/forgot-password').send({ email }).expect(404);
+
+      expect(response.body.message).toStrictEqual(`User not found with email [${email}]`);
+    });
+
+    it('should send password recovery email', async () => {
+      await api.post('/auth/forgot-password').send({ email: user.email }).expect(201);
+    });
+  });
+
   describe('reset-password', () => {
     let user: UserModel;
     let userResetPasswordToken: ResetPasswordTokenModel;
@@ -215,6 +255,12 @@ describe('AuthController (e2e)', () => {
     afterAll(async () => {
       await prisma.resetPasswordToken.deleteMany();
       await usersService.delete(user.id);
+    });
+
+    it('should raise 400 for no data', async () => {
+      const response = await api.post('/auth/reset-password').send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockResetPasswordErrorMessage);
     });
 
     it('should raise 400 for password not matching', async () => {
@@ -269,21 +315,4 @@ describe('AuthController (e2e)', () => {
       expect(passwordMatched).toStrictEqual(true);
     });
   });
-
-  // describe('forgot-password', () => {
-  //   let user: UserModel;
-
-  //   beforeAll(async () => {
-  //     user = await usersService.create({
-  //       email: 'user@ewallet.com',
-  //       name: 'Fake eWallet User',
-  //       password: '123456',
-  //       passwordConfirmation: '123456',
-  //     });
-  //   });
-
-  //   afterAll(async () => {
-  //     await usersService.delete(user.id);
-  //   });
-  // });
 });
