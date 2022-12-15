@@ -19,10 +19,15 @@ export class FirebaseStorageProvider implements IStorageProvider {
   }
 
   public async deleteFile(fileURL: string): Promise<void> {
-    const storage = getStorage();
+    try {
+      const storage = getStorage();
 
-    const fileRef = ref(storage, fileURL);
+      const fileRef = ref(storage, fileURL);
 
-    await deleteObject(fileRef);
+      await deleteObject(fileRef);
+    } catch (error) {
+      console.log(`Error trying to delete file [${fileURL}]. File probably does not exist`);
+      console.log(error);
+    }
   }
 }
