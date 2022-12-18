@@ -57,27 +57,18 @@ describe('AuthController (e2e)', () => {
     hashProvider = module.get<HashProvider>(HashProvider);
   });
 
-  afterAll(async () => {
-    await prisma.user.deleteMany();
-    await prisma.resetPasswordToken.deleteMany();
-
-    await app.close();
-  });
-
   describe('sign in', () => {
     let user: UserModel;
+    let userPassword: string;
 
     beforeAll(async () => {
+      userPassword = chance.string({ length: 10 });
       user = await usersService.create({
-        email: 'user@ewallet.com',
-        name: 'Fake eWallet User',
-        password: '123456',
-        passwordConfirmation: '123456',
+        email: chance.email(),
+        name: chance.name(),
+        password: userPassword,
+        passwordConfirmation: userPassword,
       });
-    });
-
-    afterAll(async () => {
-      await usersService.delete(user.id);
     });
 
     it('should raise 400 for no data', async () => {
@@ -111,7 +102,7 @@ describe('AuthController (e2e)', () => {
     it('should authenticate user', async () => {
       const credentials = {
         email: user.email,
-        password: '123456',
+        password: userPassword,
       };
 
       const response = await api.post('/auth/sign-in').send(credentials).expect(201);
@@ -136,10 +127,6 @@ describe('AuthController (e2e)', () => {
       });
     });
 
-    afterAll(async () => {
-      await usersService.delete(existingUser.id);
-    });
-
     it('should raise 400 for no data', async () => {
       const response = await api.post('/auth/sign-up').send(undefined).expect(400);
 
@@ -147,11 +134,13 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should raise 400 for already used email address', async () => {
+      const password = chance.string({ length: 10 });
+
       const data = {
-        email: 'used.email@ewallet.com',
-        name: 'Fake New User Name',
-        password: 'new-user-password',
-        passwordConfirmation: 'new-user-password',
+        email: existingUser.email,
+        name: chance.email(),
+        password: password,
+        passwordConfirmation: password,
       };
 
       const response = await api.post('/auth/sign-up').send(data).expect(400);
@@ -198,15 +187,11 @@ describe('AuthController (e2e)', () => {
 
     beforeAll(async () => {
       user = await usersService.create({
-        email: 'user@ewallet.com',
-        name: 'Fake eWallet User',
+        email: chance.email(),
+        name: chance.name(),
         password: '123456',
         passwordConfirmation: '123456',
       });
-    });
-
-    afterAll(async () => {
-      await usersService.delete(user.id);
     });
 
     it('should raise 400 for no data', async () => {
@@ -234,11 +219,13 @@ describe('AuthController (e2e)', () => {
     let userExpiredResetPasswordToken: ResetPasswordTokenModel;
 
     beforeAll(async () => {
+      const password = chance.string({ length: 10 });
+
       user = await usersService.create({
-        email: 'user@ewallet.com',
-        name: 'Fake eWallet User',
-        password: '123456',
-        passwordConfirmation: '123456',
+        email: chance.email(),
+        name: chance.name(),
+        password: password,
+        passwordConfirmation: password,
       });
 
       userExpiredResetPasswordToken = await prisma.resetPasswordToken.create({
@@ -250,11 +237,6 @@ describe('AuthController (e2e)', () => {
       });
 
       userResetPasswordToken = await authService.generateResetPasswordToken(user.id);
-    });
-
-    afterAll(async () => {
-      await prisma.resetPasswordToken.deleteMany();
-      await usersService.delete(user.id);
     });
 
     it('should raise 400 for no data', async () => {
@@ -314,5 +296,12 @@ describe('AuthController (e2e)', () => {
 
       expect(passwordMatched).toStrictEqual(true);
     });
+  });
+
+  afterAll(async () => {
+    await prisma.resetPasswordToken.deleteMany();
+    await prisma.user.deleteMany();
+
+    await app.close();
   });
 });

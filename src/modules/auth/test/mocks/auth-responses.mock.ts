@@ -13,6 +13,7 @@ export const mockSignUpErrorMessage = [
 
 export const mockSignInErrorMessage = [
   'email should not be empty',
+  'email must be an email',
   'email must be a string',
   'password should not be empty',
   'password must be a string',
