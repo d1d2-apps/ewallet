@@ -1,7 +1,6 @@
 import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Chance } from 'chance';
 import { subMinutes } from 'date-fns';
 
 import {
@@ -21,7 +20,7 @@ import { AuthService } from '@src/modules/auth/auth.service';
 import { PrismaService } from '@src/shared/database/prisma.service';
 import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
 
-const chance = new Chance();
+import { mockRandomEmail, mockRandomName, mockRandomPassword, mockRandomUuid } from '@src/utils/tests/mocks.fn';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -59,15 +58,14 @@ describe('AuthController (e2e)', () => {
 
   describe('sign in', () => {
     let user: UserModel;
-    let userPassword: string;
+    const password = mockRandomPassword();
 
     beforeAll(async () => {
-      userPassword = chance.string({ length: 10 });
       user = await usersService.create({
-        email: chance.email(),
-        name: chance.name(),
-        password: userPassword,
-        passwordConfirmation: userPassword,
+        email: mockRandomEmail(),
+        name: mockRandomName(),
+        password,
+        passwordConfirmation: password,
       });
     });
 
@@ -80,7 +78,7 @@ describe('AuthController (e2e)', () => {
     it('should raise 400 for wrong email address', async () => {
       const credentials = {
         email: 'non.existing.email@ewallet.com',
-        password: 'fake-password',
+        password: mockRandomPassword(),
       };
 
       const response = await api.post('/auth/sign-in').send(credentials).expect(400);
@@ -91,7 +89,7 @@ describe('AuthController (e2e)', () => {
     it('should raise 400 for wrong password', async () => {
       const credentials = {
         email: user.email,
-        password: 'wrong-password',
+        password: mockRandomPassword(),
       };
 
       const response = await api.post('/auth/sign-in').send(credentials).expect(400);
@@ -102,7 +100,7 @@ describe('AuthController (e2e)', () => {
     it('should authenticate user', async () => {
       const credentials = {
         email: user.email,
-        password: userPassword,
+        password,
       };
 
       const response = await api.post('/auth/sign-in').send(credentials).expect(201);
@@ -119,11 +117,13 @@ describe('AuthController (e2e)', () => {
     let existingUser: UserModel;
 
     beforeAll(async () => {
+      const password = mockRandomPassword();
+
       existingUser = await usersService.create({
-        email: 'used.email@ewallet.com',
-        name: 'Fake User Name',
-        password: '123456',
-        passwordConfirmation: '123456',
+        email: mockRandomEmail(),
+        name: mockRandomName(),
+        password,
+        passwordConfirmation: password,
       });
     });
 
@@ -134,12 +134,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should raise 400 for already used email address', async () => {
-      const password = chance.string({ length: 10 });
+      const password = mockRandomPassword();
 
       const data = {
         email: existingUser.email,
-        name: chance.email(),
-        password: password,
+        name: mockRandomEmail(),
+        password,
         passwordConfirmation: password,
       };
 
@@ -150,10 +150,10 @@ describe('AuthController (e2e)', () => {
 
     it('should raise 400 for password not matching', async () => {
       const data = {
-        name: chance.name(),
-        email: chance.email(),
-        password: chance.string({ length: 10 }),
-        passwordConfirmation: chance.string({ length: 10 }),
+        name: mockRandomName(),
+        email: mockRandomEmail(),
+        password: mockRandomPassword(),
+        passwordConfirmation: mockRandomPassword(),
       };
 
       const response = await api.post('/auth/sign-up').send(data).expect(400);
@@ -162,13 +162,13 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should register new user', async () => {
-      const newPassword = chance.string({ length: 10 });
+      const password = mockRandomPassword();
 
       const data = {
-        name: chance.name(),
-        email: chance.email(),
-        password: newPassword,
-        passwordConfirmation: newPassword,
+        name: mockRandomName(),
+        email: mockRandomEmail(),
+        password,
+        passwordConfirmation: password,
       };
 
       const response = await api.post('/auth/sign-up').send(data).expect(201);
@@ -186,11 +186,13 @@ describe('AuthController (e2e)', () => {
     let user: UserModel;
 
     beforeAll(async () => {
+      const password = mockRandomPassword();
+
       user = await usersService.create({
-        email: chance.email(),
-        name: chance.name(),
-        password: '123456',
-        passwordConfirmation: '123456',
+        email: mockRandomEmail(),
+        name: mockRandomName(),
+        password,
+        passwordConfirmation: password,
       });
     });
 
@@ -219,12 +221,12 @@ describe('AuthController (e2e)', () => {
     let userExpiredResetPasswordToken: ResetPasswordTokenModel;
 
     beforeAll(async () => {
-      const password = chance.string({ length: 10 });
+      const password = mockRandomPassword();
 
       user = await usersService.create({
-        email: chance.email(),
-        name: chance.name(),
-        password: password,
+        email: mockRandomEmail(),
+        name: mockRandomName(),
+        password,
         passwordConfirmation: password,
       });
 
@@ -248,8 +250,8 @@ describe('AuthController (e2e)', () => {
     it('should raise 400 for password not matching', async () => {
       const data = {
         token: userResetPasswordToken.id,
-        password: 'new-password',
-        passwordConfirmation: 'not-matching-password',
+        password: mockRandomPassword(),
+        passwordConfirmation: mockRandomPassword(),
       };
 
       const response = await api.post('/auth/reset-password').send(data).expect(400);
@@ -258,10 +260,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should raise 400 for wrong reset token', async () => {
+      const password = mockRandomPassword();
+
       const data = {
-        token: chance.guid(),
-        password: 'new-password',
-        passwordConfirmation: 'new-password',
+        token: mockRandomUuid(),
+        password,
+        passwordConfirmation: password,
       };
 
       const response = await api.post('/auth/reset-password').send(data).expect(400);
@@ -270,10 +274,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should raise 400 for expired reset token', async () => {
+      const password = mockRandomPassword();
+
       const data = {
         token: userExpiredResetPasswordToken.id,
-        password: 'new-password',
-        passwordConfirmation: 'new-password',
+        password,
+        passwordConfirmation: password,
       };
 
       const response = await api.post('/auth/reset-password').send(data).expect(400);
@@ -282,10 +288,12 @@ describe('AuthController (e2e)', () => {
     });
 
     it("should reset user's password", async () => {
+      const password = mockRandomPassword();
+
       const data = {
         token: userResetPasswordToken.id,
-        password: 'new-password',
-        passwordConfirmation: 'new-password',
+        password,
+        passwordConfirmation: password,
       };
 
       await api.post('/auth/reset-password').send(data).expect(201);
@@ -299,8 +307,8 @@ describe('AuthController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.resetPasswordToken.deleteMany();
-    await prisma.user.deleteMany();
+    // await prisma.resetPasswordToken.deleteMany();
+    // await prisma.user.deleteMany();
 
     await app.close();
   });

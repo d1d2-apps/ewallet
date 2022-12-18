@@ -1,20 +1,17 @@
 import request from 'supertest';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Chance } from 'chance';
 
 import { AppModule } from '@src/app.module';
 
-import { PrismaService } from '@src/shared/database/prisma.service';
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 
-const chance = new Chance();
+import { mockRandomEmail, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
   let api: request.SuperTest<request.Test>;
 
-  let prisma: PrismaService;
   let authService: AuthService;
 
   let userAuth: IAuthResponse;
@@ -38,14 +35,14 @@ describe('UsersController (e2e)', () => {
 
     api = request(app.getHttpServer());
 
-    prisma = module.get<PrismaService>(PrismaService);
     authService = module.get<AuthService>(AuthService);
 
+    const password = mockRandomPassword();
     userAuth = await authService.register({
-      email: chance.email(),
-      name: chance.name(),
-      password: 'user-password',
-      passwordConfirmation: 'user-password',
+      email: mockRandomEmail(),
+      name: mockRandomName(),
+      password,
+      passwordConfirmation: password,
     });
   });
 
@@ -60,7 +57,7 @@ describe('UsersController (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany();
+    // await prisma.user.deleteMany();
 
     await app.close();
   });
