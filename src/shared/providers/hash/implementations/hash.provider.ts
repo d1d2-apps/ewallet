@@ -1,6 +1,6 @@
 import { IHashProvider } from '../models/hash-provider.model';
 
-export class HashProvider implements IHashProvider {
+export abstract class HashProvider implements IHashProvider {
   public async generateHash(payload: string): Promise<string> {
     return;
   }
