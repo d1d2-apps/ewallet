@@ -11,3 +11,5 @@ export const mockRandomEmail = () => chance.email();
 export const mockRandomUuid = () => chance.guid();
 
 export const mockRandomInvalidToken = () => chance.string({ length: 32 });
+
+export const mockRandomString = (props: Partial<Chance.StringOptions>) => chance.string(props);

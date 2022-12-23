@@ -111,6 +111,10 @@ export class UsersService {
   }
 
   public async uploadPicture(id: string, file: Express.Multer.File): Promise<UserModel> {
+    if (!file) {
+      throw new BadRequestException('File is missing');
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     const folder = process.env.USERS_AVATARS_FOLDER;

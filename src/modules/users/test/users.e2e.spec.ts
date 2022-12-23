@@ -1,4 +1,5 @@
 import request from 'supertest';
+import path from 'path';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -159,6 +160,29 @@ describe('UsersController (e2e)', () => {
       };
 
       await api.patch('/users/account/password').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
+    });
+  });
+
+  describe('upload picture', () => {
+    it('should not upload picture with empty file', async () => {
+      const data = { file: undefined };
+
+      const response = await api.patch('/users/profile/picture').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('File is missing');
+    });
+
+    it('should upload user profile picture', async () => {
+      const filePath = path.join(__dirname, '..', '..', '..', 'assets', 'tests', 'picture.png');
+
+      const response = await api
+        .patch('/users/profile/picture')
+        .set('Content-Type', 'multipart/form-data')
+        .set('authorization', `Bearer ${userAuth.token}`)
+        .attach('file', filePath)
+        .expect(200);
+
+      expect(response.body.picture).toStrictEqual(`${process.env.USERS_AVATARS_FOLDER}/${userAuth.user.id}`);
     });
   });
 
