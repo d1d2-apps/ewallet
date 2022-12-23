@@ -8,7 +8,7 @@ import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
-import { mockUpdateProfileInvalidData } from './mocks/users-responses.mock';
+import { mockChangePasswordNoDataResponse, mockUpdateProfileInvalidDataResponse } from './mocks/users-responses.mock';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -17,6 +17,7 @@ describe('UsersController (e2e)', () => {
   let authService: AuthService;
 
   let userAuth: IAuthResponse;
+  let userPassword: string;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -39,12 +40,12 @@ describe('UsersController (e2e)', () => {
 
     authService = module.get<AuthService>(AuthService);
 
-    const password = mockRandomPassword();
+    userPassword = mockRandomPassword();
     userAuth = await authService.register({
       email: mockRandomEmail(),
       name: mockRandomName(),
-      password,
-      passwordConfirmation: password,
+      password: userPassword,
+      passwordConfirmation: userPassword,
     });
   });
 
@@ -84,7 +85,7 @@ describe('UsersController (e2e)', () => {
 
       const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
 
-      expect(response.body.message).toStrictEqual(mockUpdateProfileInvalidData);
+      expect(response.body.message).toStrictEqual(mockUpdateProfileInvalidDataResponse);
     });
 
     it('should raise 400 for already used e-mail address', async () => {
@@ -112,6 +113,52 @@ describe('UsersController (e2e)', () => {
       const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
 
       expect(response.body.name).toStrictEqual(data.name);
+    });
+  });
+
+  describe('chance password', () => {
+    it('should raise 400 for no data', async () => {
+      const response = await api.patch('/users/account/password').set('authorization', `Bearer ${userAuth.token}`).send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockChangePasswordNoDataResponse);
+    });
+
+    it('should raise 400 for not motching old password', async () => {
+      const newPassword = mockRandomPassword();
+
+      const data = {
+        oldPassword: mockRandomPassword(),
+        password: newPassword,
+        passwordConfirmation: newPassword,
+      };
+
+      const response = await api.patch('/users/account/password').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('Old password does not match');
+    });
+
+    it('should raise 400 for not motching new password', async () => {
+      const data = {
+        oldPassword: userPassword,
+        password: mockRandomPassword(),
+        passwordConfirmation: mockRandomPassword(),
+      };
+
+      const response = await api.patch('/users/account/password').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual('Password and password confirmation do not match');
+    });
+
+    it('should chance user password', async () => {
+      const newPassword = mockRandomPassword();
+
+      const data = {
+        oldPassword: userPassword,
+        password: newPassword,
+        passwordConfirmation: newPassword,
+      };
+
+      await api.patch('/users/account/password').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
     });
   });
 
