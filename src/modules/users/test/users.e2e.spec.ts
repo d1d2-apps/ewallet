@@ -6,7 +6,7 @@ import { AppModule } from '@src/app.module';
 
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 
-import { mockRandomEmail, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
+import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -47,6 +47,20 @@ describe('UsersController (e2e)', () => {
   });
 
   describe('get me', () => {
+    it('should not get unauthenticated user information', async () => {
+      const response = await api.get('/users/me').expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should not get user information with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.get('/users/me').set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
     it('should get logged user information', async () => {
       const response = await api.get('/users/me').set('authorization', `Bearer ${userAuth.token}`).expect(200);
 

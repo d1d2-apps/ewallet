@@ -9,3 +9,5 @@ export const mockRandomName = () => chance.name();
 export const mockRandomEmail = () => chance.email();
 
 export const mockRandomUuid = () => chance.guid();
+
+export const mockRandomInvalidToken = () => chance.string({ length: 32 });
