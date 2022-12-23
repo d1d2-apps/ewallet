@@ -6,6 +6,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '@src/app.module';
 
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
+import { UsersService } from '../users.service';
 
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
@@ -16,6 +17,7 @@ describe('UsersController (e2e)', () => {
   let api: request.SuperTest<request.Test>;
 
   let authService: AuthService;
+  let usersService: UsersService;
 
   let userAuth: IAuthResponse;
   let userPassword: string;
@@ -40,6 +42,7 @@ describe('UsersController (e2e)', () => {
     api = request(app.getHttpServer());
 
     authService = module.get<AuthService>(AuthService);
+    usersService = module.get<UsersService>(UsersService);
 
     userPassword = mockRandomPassword();
     userAuth = await authService.register({
@@ -183,6 +186,42 @@ describe('UsersController (e2e)', () => {
         .expect(200);
 
       expect(response.body.picture).toStrictEqual(`${process.env.USERS_AVATARS_FOLDER}/${userAuth.user.id}`);
+    });
+  });
+
+  describe('delete account', () => {
+    it('should not delete account for unauthorized user', async () => {
+      const response = await api.delete('/users/account').expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+
+      const user = await usersService.findById(userAuth.user.id);
+
+      expect(user).toBeDefined();
+      expect(user).toBeTruthy();
+    });
+
+    it('should not delete account with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.delete('/users/account').set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+
+      const user = await usersService.findById(userAuth.user.id);
+
+      expect(user).toBeDefined();
+      expect(user).toBeTruthy();
+    });
+
+    it('should delete user account', async () => {
+      await api.delete('/users/account').set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      const user = await usersService.findById(userAuth.user.id).catch((error) => {
+        expect(error.message).toStrictEqual(`User not found with id [${userAuth.user.id}]`);
+      });
+
+      expect(user).not.toBeDefined();
     });
   });
 
