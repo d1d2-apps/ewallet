@@ -8,6 +8,8 @@ import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
+import { mockUpdateProfileInvalidData } from './mocks/users-responses.mock';
+
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
   let api: request.SuperTest<request.Test>;
@@ -67,6 +69,49 @@ describe('UsersController (e2e)', () => {
       expect(response.body).not.toHaveProperty('password');
       expect(response.body.name).toStrictEqual(userAuth.user.name);
       expect(response.body.email).toStrictEqual(userAuth.user.email);
+    });
+  });
+
+  describe('update profile', () => {
+    it('should raise 400 for no data', async () => {
+      const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual('There is no information to update');
+    });
+
+    it('should raise 400 for invalid data', async () => {
+      const data = { email: 'invalid-email' };
+
+      const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockUpdateProfileInvalidData);
+    });
+
+    it('should raise 400 for already used e-mail address', async () => {
+      const password = mockRandomPassword();
+      const otherUser = await authService.register({
+        email: mockRandomEmail(),
+        name: mockRandomName(),
+        password,
+        passwordConfirmation: password,
+      });
+
+      const data = { email: otherUser.user.email };
+
+      const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual(`The provided email [${data.email}] is already in use`);
+    });
+
+    it('should update user profile', async () => {
+      const data = {
+        email: userAuth.user.email,
+        name: mockRandomName(),
+      };
+
+      const response = await api.put('/users/profile').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
+
+      expect(response.body.name).toStrictEqual(data.name);
     });
   });
 

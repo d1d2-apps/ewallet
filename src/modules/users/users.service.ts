@@ -66,6 +66,10 @@ export class UsersService {
   }
 
   public async update(id: string, data: UpdateUserDto): Promise<UserModel> {
+    if (!data.email && !data.name) {
+      throw new BadRequestException('There is no information to update');
+    }
+
     const user = await this.findById(id);
 
     if (data.email && data.email !== user.email) {
