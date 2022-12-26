@@ -52,7 +52,7 @@ describe('DebtorsController (e2e)', () => {
   });
 
   describe("get user's debtors list", () => {
-    it('should not get unauthenticated user debtors list', async () => {
+    it('should not get unauthenticated user debtorst authenticated user', async () => {
       const response = await api.get('/users/debtors').expect(401);
 
       expect(response.body.message).toStrictEqual('JWT token is missing');
@@ -99,7 +99,7 @@ describe('DebtorsController (e2e)', () => {
       });
     });
 
-    it('should not get unauthenticated debtor', async () => {
+    it('should not get unauthenticatedt authenticated user', async () => {
       const response = await api.get(`/users/debtors/${debtor.id}`).expect(401);
 
       expect(response.body.message).toStrictEqual('JWT token is missing');
@@ -131,13 +131,13 @@ describe('DebtorsController (e2e)', () => {
   });
 
   describe('create debtor', () => {
-    it('should raise 400 for no data', async () => {
+    it('should raise 400 for not authenticated user', async () => {
       const response = await api.post('/users/debtors').expect(401);
 
       expect(response.body.message).toStrictEqual('JWT token is missing');
     });
 
-    it('should raise 400 for no data', async () => {
+    it('should raise 400 for invalid JWT token', async () => {
       const invalidToken = mockRandomInvalidToken();
 
       const response = await api.post('/users/debtors').set('authorization', `Bearer ${invalidToken}`).expect(401);
@@ -186,13 +186,13 @@ describe('DebtorsController (e2e)', () => {
       });
     });
 
-    it('should raise 400 for no data', async () => {
+    it('should raise 400 for not authenticated user', async () => {
       const response = await api.put(`/users/debtors/${debtor.id}`).expect(401);
 
       expect(response.body.message).toStrictEqual('JWT token is missing');
     });
 
-    it('should raise 400 for no data', async () => {
+    it('should raise 400 for invalid JWT token', async () => {
       const invalidToken = mockRandomInvalidToken();
 
       const response = await api.put(`/users/debtors/${debtor.id}`).set('authorization', `Bearer ${invalidToken}`).expect(401);
@@ -219,6 +219,49 @@ describe('DebtorsController (e2e)', () => {
       expect(response.body.id).toStrictEqual(debtor.id);
       expect(response.body.name).toStrictEqual(data.name);
       expect(response.body.color).toStrictEqual(data.color);
+    });
+  });
+
+  describe('delete debtor', () => {
+    let debtor: DebtorModel;
+
+    beforeAll(async () => {
+      debtor = await debtorsService.create(userAuth.user.id, {
+        name: mockRandomName(),
+        color: '#ffffff',
+      });
+    });
+
+    it('should raise 400 for not authenticated user', async () => {
+      const response = await api.delete(`/users/debtors/${debtor.id}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should raise 400 for invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.delete(`/users/debtors/${debtor.id}`).set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it('should raise 400 for invalid debtor id', async () => {
+      const invalidDebtorId = mockRandomUuid();
+
+      const response = await api.put(`/users/debtors/${invalidDebtorId}`).set('authorization', `Bearer ${userAuth.token}`).expect(404);
+
+      expect(response.body.message).toStrictEqual(`Debtor not found with id [${invalidDebtorId}]`);
+    });
+
+    it('should delete debtor', async () => {
+      await api.delete(`/users/debtors/${debtor.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      const deletedDebtor = await debtorsService.findById(debtor.id).catch((error) => {
+        expect(error.message).toStrictEqual(`Debtor not found with id [${debtor.id}]`);
+      });
+
+      expect(deletedDebtor).not.toBeDefined();
     });
   });
 });
