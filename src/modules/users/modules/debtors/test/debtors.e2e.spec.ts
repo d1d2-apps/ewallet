@@ -175,4 +175,50 @@ describe('DebtorsController (e2e)', () => {
       expect(response.body.color).toStrictEqual(data.color);
     });
   });
+
+  describe('update debtor', () => {
+    let debtor: DebtorModel;
+
+    beforeAll(async () => {
+      debtor = await debtorsService.create(userAuth.user.id, {
+        name: mockRandomName(),
+        color: '#ffffff',
+      });
+    });
+
+    it('should raise 400 for no data', async () => {
+      const response = await api.put(`/users/debtors/${debtor.id}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should raise 400 for no data', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.put(`/users/debtors/${debtor.id}`).set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it('should raise 400 for invalid debtor id', async () => {
+      const invalidDebtorId = mockRandomUuid();
+
+      const response = await api.put(`/users/debtors/${invalidDebtorId}`).set('authorization', `Bearer ${userAuth.token}`).expect(404);
+
+      expect(response.body.message).toStrictEqual(`Debtor not found with id [${invalidDebtorId}]`);
+    });
+
+    it('should update debtor', async () => {
+      const data = {
+        name: mockRandomName(),
+        color: '#000000',
+      };
+
+      const response = await api.put(`/users/debtors/${debtor.id}`).set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
+
+      expect(response.body.id).toStrictEqual(debtor.id);
+      expect(response.body.name).toStrictEqual(data.name);
+      expect(response.body.color).toStrictEqual(data.color);
+    });
+  });
 });
