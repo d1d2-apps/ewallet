@@ -9,7 +9,7 @@ import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword, mockRandomUuid } from '@src/utils/tests/mocks.fn';
 import { DebtorsService } from '../debtors.service';
 import { DebtorModel } from '../models/debtor.model';
-import { mockCreateDebtorNoDataResponse } from './mocks/debtors-responses.mock';
+import { mockCreateDebtorNoDataResponse, mockCreateDebtorNoHexColorResponse } from './mocks/debtors-responses.mock';
 
 describe('DebtorsController (e2e)', () => {
   let app: INestApplication;
@@ -157,7 +157,9 @@ describe('DebtorsController (e2e)', () => {
         color: 'white',
       };
 
-      await api.post('/users/debtors').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+      const response = await api.post('/users/debtors').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockCreateDebtorNoHexColorResponse);
     });
 
     it('should create debtor', async () => {

@@ -5,3 +5,5 @@ export const mockCreateDebtorNoDataResponse = [
   'color should not be empty',
   'color must be a string',
 ];
+
+export const mockCreateDebtorNoHexColorResponse = ['color must be a hexadecimal color'];
