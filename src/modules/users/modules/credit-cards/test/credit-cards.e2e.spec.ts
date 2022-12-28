@@ -241,4 +241,8 @@ describe('CreditCardsController (e2e)', () => {
       expect(deletedCreditCard).not.toBeDefined();
     });
   });
+
+  afterAll(async () => {
+    await app.close();
+  });
 });

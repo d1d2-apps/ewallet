@@ -29,13 +29,13 @@ describe('AppController (e2e)', () => {
     api = request(app.getHttpServer());
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
   describe('root', () => {
     it('should return welcome message', () => {
       return api.get('/').expect(200).expect({ message: 'Welcome to the eWallet API' });
     });
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

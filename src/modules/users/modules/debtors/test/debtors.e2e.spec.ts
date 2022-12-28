@@ -264,4 +264,8 @@ describe('DebtorsController (e2e)', () => {
       expect(deletedDebtor).not.toBeDefined();
     });
   });
+
+  afterAll(async () => {
+    await app.close();
+  });
 });
