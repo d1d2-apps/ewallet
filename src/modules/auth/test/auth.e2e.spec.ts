@@ -1,26 +1,24 @@
-import request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { subMinutes } from 'date-fns';
+import { Test, TestingModule } from '@nestjs/testing';
 
+import { subMinutes } from 'date-fns';
+import request from 'supertest';
+
+import { AppModule } from '@src/app.module';
+import { AuthService } from '@src/modules/auth/auth.service';
+import { UserModel } from '@src/modules/users/models/user.model';
+import { UsersService } from '@src/modules/users/users.service';
+import { PrismaService } from '@src/shared/database/prisma.service';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
+import { mockRandomEmail, mockRandomName, mockRandomPassword, mockRandomUuid } from '@src/utils/tests/mocks.fn';
+
+import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
 import {
   mockForgotPasswordErrorMessage,
   mockResetPasswordErrorMessage,
   mockSignInErrorMessage,
   mockSignUpErrorMessage,
 } from './mocks/auth-responses.mock';
-
-import { AppModule } from '@src/app.module';
-
-import { UserModel } from '@src/modules/users/models/user.model';
-import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
-
-import { UsersService } from '@src/modules/users/users.service';
-import { AuthService } from '@src/modules/auth/auth.service';
-import { PrismaService } from '@src/shared/database/prisma.service';
-import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
-
-import { mockRandomEmail, mockRandomName, mockRandomPassword, mockRandomUuid } from '@src/utils/tests/mocks.fn';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;

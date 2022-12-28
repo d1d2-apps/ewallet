@@ -1,13 +1,12 @@
 import { Body, Controller, Delete, Get, Patch, Put, Req, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Request } from 'express';
 
-import { UsersService } from './users.service';
+import { Request } from 'express';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-
 import { UserModel } from './models/user.model';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {

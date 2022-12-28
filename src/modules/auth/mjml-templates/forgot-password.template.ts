@@ -1,5 +1,7 @@
 import mjml2html from 'mjml';
+
 import { UserModel } from '@src/modules/users/models/user.model';
+
 import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
 
 export function parseForgotPasswordEmailTemplate(user: UserModel, resetPasswordToken: ResetPasswordTokenModel): string {

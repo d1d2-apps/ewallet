@@ -1,15 +1,14 @@
-import request from 'supertest';
-import path from 'path';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import path from 'path';
+import request from 'supertest';
+
 import { AppModule } from '@src/app.module';
-
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
-import { UsersService } from '../users.service';
-
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword } from '@src/utils/tests/mocks.fn';
 
+import { UsersService } from '../users.service';
 import { mockChangePasswordNoDataResponse, mockUpdateProfileInvalidDataResponse } from './mocks/users-responses.mock';
 
 describe('UsersController (e2e)', () => {

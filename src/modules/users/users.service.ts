@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+
 import { plainToClass, plainToInstance } from 'class-transformer';
 
-import { StorageProvider } from '@src/shared/providers/storage/implementations/storage.provider';
-import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
 import { PrismaService } from '@src/shared/database/prisma.service';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
+import { StorageProvider } from '@src/shared/providers/storage/implementations/storage.provider';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-
 import { UserModel } from './models/user.model';
 
 @Injectable()

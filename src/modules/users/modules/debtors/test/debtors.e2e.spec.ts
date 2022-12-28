@@ -1,12 +1,12 @@
-import request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import request from 'supertest';
 
 import { AppModule } from '@src/app.module';
-
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
-
 import { mockRandomEmail, mockRandomInvalidToken, mockRandomName, mockRandomPassword, mockRandomUuid } from '@src/utils/tests/mocks.fn';
+
 import { DebtorsService } from '../debtors.service';
 import { DebtorModel } from '../models/debtor.model';
 import { mockCreateDebtorNoDataResponse, mockCreateDebtorNoHexColorResponse } from './mocks/debtors-responses.mock';

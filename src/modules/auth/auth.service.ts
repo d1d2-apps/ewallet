@@ -1,26 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+
 import { plainToClass } from 'class-transformer';
-import { sign } from 'jsonwebtoken';
 import { addMinutes, isAfter } from 'date-fns';
+import { sign } from 'jsonwebtoken';
 
 import { authConfig } from '@src/config/auth.config';
-
-import { MailProvider } from '@src/shared/providers/mail/implementations/mail.provider';
-import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
-
 import { PrismaService } from '@src/shared/database/prisma.service';
-import { UsersService } from '../users/users.service';
-
-import { AuthenticateDto } from './dtos/authenticate.dto';
-import { CreateUserDto } from '../users/dtos/create-user.dto';
-import { ForgotPasswordDto } from './dtos/forgot-password.dto';
-import { ResetPasswordDto } from './dtos/reset-password.dto';
-
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
+import { MailProvider } from '@src/shared/providers/mail/implementations/mail.provider';
 import { IEmailData } from '@src/shared/providers/mail/models/mail-provider.model';
 
-import { parseForgotPasswordEmailTemplate } from './mjml-templates/forgot-password.template';
-
+import { CreateUserDto } from '../users/dtos/create-user.dto';
 import { UserModel } from '../users/models/user.model';
+import { UsersService } from '../users/users.service';
+import { AuthenticateDto } from './dtos/authenticate.dto';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { parseForgotPasswordEmailTemplate } from './mjml-templates/forgot-password.template';
 import { ResetPasswordTokenModel } from './models/reset-password-token.model';
 
 export interface IAuthResponse {
