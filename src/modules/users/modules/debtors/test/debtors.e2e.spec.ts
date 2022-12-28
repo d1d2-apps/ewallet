@@ -52,7 +52,7 @@ describe('DebtorsController (e2e)', () => {
   });
 
   describe("get user's debtors list", () => {
-    it('should not get unauthenticated user debtorst authenticated user', async () => {
+    it('should not get unauthenticated user debtors authenticated user', async () => {
       const response = await api.get('/users/debtors').expect(401);
 
       expect(response.body.message).toStrictEqual('JWT token is missing');
@@ -249,7 +249,7 @@ describe('DebtorsController (e2e)', () => {
     it('should raise 400 for invalid debtor id', async () => {
       const invalidDebtorId = mockRandomUuid();
 
-      const response = await api.put(`/users/debtors/${invalidDebtorId}`).set('authorization', `Bearer ${userAuth.token}`).expect(404);
+      const response = await api.delete(`/users/debtors/${invalidDebtorId}`).set('authorization', `Bearer ${userAuth.token}`).expect(404);
 
       expect(response.body.message).toStrictEqual(`Debtor not found with id [${invalidDebtorId}]`);
     });
