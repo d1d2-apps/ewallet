@@ -1,19 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+
 import { plainToClass, plainToInstance } from 'class-transformer';
 
-import { FirebaseStorageProvider } from '@src/shared/providers/storage/firebase-storage.provider';
-import { BCryptHashProvider } from 'src/shared/providers/hash/bcrypt-hash.provider';
-import { PrismaService } from 'src/shared/database/prisma.service';
+import { PrismaService } from '@src/shared/database/prisma.service';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
+import { StorageProvider } from '@src/shared/providers/storage/implementations/storage.provider';
 
 import { ChangePasswordDto } from './dtos/change-password.dto';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
-
 import { UserModel } from './models/user.model';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService, private hashProvider: BCryptHashProvider, private storageProvider: FirebaseStorageProvider) {}
+  constructor(private prisma: PrismaService, private hashProvider: HashProvider, private storageProvider: StorageProvider) {}
 
   public async findAll(): Promise<UserModel[]> {
     const users = await this.prisma.user.findMany();
@@ -66,6 +66,10 @@ export class UsersService {
   }
 
   public async update(id: string, data: UpdateUserDto): Promise<UserModel> {
+    if (!data.email && !data.name) {
+      throw new BadRequestException('There is no information to update');
+    }
+
     const user = await this.findById(id);
 
     if (data.email && data.email !== user.email) {
@@ -107,6 +111,10 @@ export class UsersService {
   }
 
   public async uploadPicture(id: string, file: Express.Multer.File): Promise<UserModel> {
+    if (!file) {
+      throw new BadRequestException('File is missing');
+    }
+
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     const folder = process.env.USERS_AVATARS_FOLDER;

@@ -1,7 +1,9 @@
 import { NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
-import { authConfig } from '@src/config/auth.config';
+
 import { verify } from 'jsonwebtoken';
+
+import { authConfig } from '@src/config/auth.config';
 
 interface ITokenPayload {
   iat: number;

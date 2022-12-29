@@ -1,8 +1,10 @@
 import mjml2html from 'mjml';
-import { UserModel } from '@src/modules/users/models/user.model';
-import { ResetPasswordToken } from '../models/reset-password-token.model';
 
-export function parseForgotPasswordEmailTemplate(user: UserModel, resetPasswordToken: ResetPasswordToken): string {
+import { UserModel } from '@src/modules/users/models/user.model';
+
+import { ResetPasswordTokenModel } from '../models/reset-password-token.model';
+
+export function parseForgotPasswordEmailTemplate(user: UserModel, resetPasswordToken: ResetPasswordTokenModel): string {
   const link = `${process.env.WEB_URL}/reset-password?token=${resetPasswordToken.id}`;
 
   const { html } = mjml2html(`

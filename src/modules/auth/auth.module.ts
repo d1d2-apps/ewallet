@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
+
 import { PrismaService } from '@src/shared/database/prisma.service';
-import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
-import { SendInBlueMailProvider } from '@src/shared/providers/mail/send-in-blue-mail.provider';
-import { FirebaseStorageProvider } from '@src/shared/providers/storage/firebase-storage.provider';
+import { hashServiceProvider } from '@src/shared/providers/hash';
+import { mailServiceProvider } from '@src/shared/providers/mail';
+import { storageServiceProvider } from '@src/shared/providers/storage';
+
 import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, UsersService, PrismaService, BCryptHashProvider, SendInBlueMailProvider, FirebaseStorageProvider],
+  providers: [AuthService, UsersService, PrismaService, hashServiceProvider, mailServiceProvider, storageServiceProvider],
 })
 export class AuthModule {}

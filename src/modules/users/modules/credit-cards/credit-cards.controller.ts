@@ -1,12 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
+
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
 
-import { CreditCardModel } from './models/credit-card.model';
-
-import { CreateOrUpdateCreditCardDto } from './dtos/create-or-update-credit-card.dto';
-
 import { CreditCardsService } from './credit-cards.service';
+import { CreateOrUpdateCreditCardDto } from './dtos/create-or-update-credit-card.dto';
+import { CreditCardModel } from './models/credit-card.model';
 
 class IdParam {
   @IsString()
