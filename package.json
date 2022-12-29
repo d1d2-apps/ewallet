@@ -16,7 +16,7 @@
     "start:test": "dotenv -e .env.test nest start --watch",
     "start:prod": "dotenv -e .env.prod node dist/main",
     "test:cov": "dotenv -e .env.test jest --coverage --forceExit",
-    "test:e2e": "dotenv -e .env.test jest --testRegex='.*\\e2e.spec\\.ts$' --silent --noStackTrace --passWithNoTests --forceExit",
+    "test:e2e": "dotenv -e .env.test npx prisma migrate reset --force && dotenv -e .env.test jest --testRegex='.*\\e2e.spec\\.ts$' --silent --noStackTrace --passWithNoTests --forceExit",
     "migrate:dev": "npx prisma migrate dev",
     "migrate:test": "dotenv -e .env.test npx prisma migrate dev"
   },
