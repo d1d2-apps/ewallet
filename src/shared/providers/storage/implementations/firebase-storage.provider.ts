@@ -1,7 +1,8 @@
-import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { Injectable } from '@nestjs/common';
 
-import { IStorageProvider, IUploadResult } from './storage-provider.model';
+import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+
+import { IStorageProvider, IUploadResult } from '../models/storage-provider.model';
 
 @Injectable()
 export class FirebaseStorageProvider implements IStorageProvider {
@@ -19,10 +20,15 @@ export class FirebaseStorageProvider implements IStorageProvider {
   }
 
   public async deleteFile(fileURL: string): Promise<void> {
-    const storage = getStorage();
+    try {
+      const storage = getStorage();
 
-    const fileRef = ref(storage, fileURL);
+      const fileRef = ref(storage, fileURL);
 
-    await deleteObject(fileRef);
+      await deleteObject(fileRef);
+    } catch (error) {
+      console.log(`Error trying to delete file [${fileURL}]. File probably does not exist`);
+      console.log(error);
+    }
   }
 }

@@ -1,5 +1,7 @@
-import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
 import { Exclude, Expose } from 'class-transformer';
+
+import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
+
 import { CreditCardModel } from '../modules/credit-cards/models/credit-card.model';
 
 export class UserModel {

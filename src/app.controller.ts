@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+
 import { AppService, IRootResponse } from './app.service';
 
 @Controller()

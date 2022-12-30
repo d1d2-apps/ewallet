@@ -1,5 +1,6 @@
-import { UserModel } from '@src/modules/users/models/user.model';
 import { Expose } from 'class-transformer';
+
+import { UserModel } from '@src/modules/users/models/user.model';
 
 export class DebtorModel {
   @Expose()

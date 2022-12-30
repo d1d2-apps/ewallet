@@ -1,19 +1,23 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaService } from '@src/shared/database/prisma.service';
-import { BCryptHashProvider } from '@src/shared/providers/hash/bcrypt-hash.provider';
-import { UserModel } from '../users/models/user.model';
-import { authConfig } from '@src/config/auth.config';
+
 import { plainToClass } from 'class-transformer';
-import { AuthenticateDto } from './dtos/authenticate.dto';
-import { sign } from 'jsonwebtoken';
-import { CreateUserDto } from '../users/dtos/create-user.dto';
-import { UsersService } from '../users/users.service';
-import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { addMinutes, isAfter } from 'date-fns';
-import { SendInBlueMailProvider } from '@src/shared/providers/mail/send-in-blue-mail.provider';
-import { IEmailData } from '@src/shared/providers/mail/mail.provider';
-import { parseForgotPasswordEmailTemplate } from './mjml-templates/forgot-password.template';
+import { sign } from 'jsonwebtoken';
+
+import { authConfig } from '@src/config/auth.config';
+import { PrismaService } from '@src/shared/database/prisma.service';
+import { HashProvider } from '@src/shared/providers/hash/implementations/hash.provider';
+import { MailProvider } from '@src/shared/providers/mail/implementations/mail.provider';
+import { IEmailData } from '@src/shared/providers/mail/models/mail-provider.model';
+
+import { CreateUserDto } from '../users/dtos/create-user.dto';
+import { UserModel } from '../users/models/user.model';
+import { UsersService } from '../users/users.service';
+import { AuthenticateDto } from './dtos/authenticate.dto';
+import { ForgotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { parseForgotPasswordEmailTemplate } from './mjml-templates/forgot-password.template';
+import { ResetPasswordTokenModel } from './models/reset-password-token.model';
 
 export interface IAuthResponse {
   user: UserModel;
@@ -25,8 +29,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private userService: UsersService,
-    private hashProvider: BCryptHashProvider,
-    private mailProvider: SendInBlueMailProvider,
+    private hashProvider: HashProvider,
+    private mailProvider: MailProvider,
   ) {}
 
   public async authenticate(credentials: AuthenticateDto): Promise<IAuthResponse> {
@@ -62,23 +66,7 @@ export class AuthService {
   public async sendForgotPasswordEmail({ email }: ForgotPasswordDto): Promise<void> {
     const user = await this.userService.findByEmail(email);
 
-    const lastToken = await this.prisma.resetPasswordToken.findFirst({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
-
-    let isLastTokenExpired = false;
-
-    if (!lastToken || !lastToken.active || lastToken.expiresIn < new Date()) {
-      isLastTokenExpired = true;
-    }
-
-    const resetPasswordToken = isLastTokenExpired
-      ? await this.prisma.resetPasswordToken.create({
-          data: {
-            userId: user.id,
-            active: true,
-            expiresIn: addMinutes(new Date(), Number(process.env.RESET_PASSWORD_TOKEN_EXPIRES_IN)).toISOString(),
-          },
-        })
-      : lastToken;
+    const resetPasswordToken = await this.generateResetPasswordToken(user.id);
 
     const htmlContent = parseForgotPasswordEmailTemplate(user, resetPasswordToken);
 
@@ -121,5 +109,27 @@ export class AuthService {
     await this.prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
 
     await this.prisma.resetPasswordToken.update({ where: { id: resetPasswordToken.id }, data: { active: false } });
+  }
+
+  public async generateResetPasswordToken(userId: string): Promise<ResetPasswordTokenModel> {
+    const lastToken = await this.prisma.resetPasswordToken.findFirst({ where: { userId: userId }, orderBy: { createdAt: 'desc' } });
+
+    let isLastTokenExpired = false;
+
+    if (!lastToken || !lastToken.active || lastToken.expiresIn < new Date()) {
+      isLastTokenExpired = true;
+    }
+
+    const resetPasswordToken = isLastTokenExpired
+      ? await this.prisma.resetPasswordToken.create({
+          data: {
+            userId,
+            active: true,
+            expiresIn: addMinutes(new Date(), Number(process.env.RESET_PASSWORD_TOKEN_EXPIRES_IN)).toISOString(),
+          },
+        })
+      : lastToken;
+
+    return resetPasswordToken;
   }
 }

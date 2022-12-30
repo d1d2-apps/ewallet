@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { plainToClass, plainToInstance } from 'class-transformer';
 
 import { PrismaService } from '@src/shared/database/prisma.service';
+
 import { UsersService } from '../../users.service';
-
-import { DebtorModel } from './models/debtor.model';
-
 import { CreateDebtorDto } from './dtos/create-debtor.dto';
 import { UpdateDebtorDto } from './dtos/update-debtor.dto';
+import { DebtorModel } from './models/debtor.model';
 
 @Injectable()
 export class DebtorsService {

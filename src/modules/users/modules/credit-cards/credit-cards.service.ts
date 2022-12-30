@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
 import { plainToClass, plainToInstance } from 'class-transformer';
 
 import { PrismaService } from '@src/shared/database/prisma.service';
-import { UsersService } from '../../users.service';
 
-import { CreditCardModel } from './models/credit-card.model';
+import { UsersService } from '../../users.service';
 import { CreateOrUpdateCreditCardDto } from './dtos/create-or-update-credit-card.dto';
+import { CreditCardModel } from './models/credit-card.model';
 
 @Injectable()
 export class CreditCardsService {

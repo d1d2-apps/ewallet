@@ -1,13 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common';
+
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
 
 import { DebtorsService } from './debtors.service';
-
-import { DebtorModel } from './models/debtor.model';
-
 import { CreateDebtorDto } from './dtos/create-debtor.dto';
 import { UpdateDebtorDto } from './dtos/update-debtor.dto';
+import { DebtorModel } from './models/debtor.model';
 
 class IdParam {
   @IsString()

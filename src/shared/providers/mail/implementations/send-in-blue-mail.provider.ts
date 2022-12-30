@@ -1,5 +1,6 @@
 import * as SibApiV3Sdk from '@sendinblue/client';
-import { IEmailData, IMailProvider } from './mail.provider';
+
+import { IEmailData, IMailProvider } from '../models/mail-provider.model';
 
 export class SendInBlueMailProvider implements IMailProvider {
   public async sendEmail(emailData: IEmailData): Promise<void> {
