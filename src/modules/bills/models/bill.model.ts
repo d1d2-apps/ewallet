@@ -1,7 +1,8 @@
 import { Expose } from 'class-transformer';
 
-import { CreditCardModel } from '@src/modules/users/modules/credit-cards/models/credit-card.model';
 import { UserModel } from '@src/modules/users/models/user.model';
+import { CreditCardModel } from '@src/modules/users/modules/credit-cards/models/credit-card.model';
+
 import { BillDebtorModel } from './bill-debtor.model';
 
 export class BillModel {

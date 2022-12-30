@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { EnsureAuthenticatedMiddleware } from './modules/auth/middlewares/ensure-authenticated.middleware';
+import { BillsController } from './modules/bills/bills.controller';
 import { BillsModule } from './modules/bills/bills.module';
 import { CreditCardsController } from './modules/users/modules/credit-cards/credit-cards.controller';
 import { DebtorsController } from './modules/users/modules/debtors/debtors.controller';

@@ -1,12 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+
 import { plainToClass, plainToInstance } from 'class-transformer';
 
 import { PrismaService } from '@src/shared/database/prisma.service';
+
 import { CreditCardsService } from '../users/modules/credit-cards/credit-cards.service';
 import { DebtorsService } from '../users/modules/debtors/debtors.service';
-
 import { BillDto, CreateBillDto } from './dtos/create-bill.dto';
-
 import { BillDebtorModel } from './models/bill-debtor.model';
 import { BillModel } from './models/bill.model';
 

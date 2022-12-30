@@ -1,8 +1,9 @@
 import { Expose } from 'class-transformer';
 
-import { BillModel } from './bill.model';
 import { UserModel } from '@src/modules/users/models/user.model';
 import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
+
+import { BillModel } from './bill.model';
 
 export class BillDebtorModel {
   @Expose()
