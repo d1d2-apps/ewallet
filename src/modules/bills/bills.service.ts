@@ -14,6 +14,12 @@ import { BillModel } from './models/bill.model';
 export class BillsService {
   constructor(private prisma: PrismaService, private creditCards: CreditCardsService, private debtors: DebtorsService) {}
 
+  public async findAll(userId: string): Promise<BillModel[]> {
+    const bills = await this.prisma.bill.findMany({ where: { userId }, include: { billDebtors: true, creditCard: true }, orderBy: { date: 'desc' } });
+
+    return plainToInstance(BillModel, bills);
+  }
+
   public async create(userId: string, data: CreateBillDto): Promise<BillModel | BillModel[]> {
     if (!data.bill && !data.bills?.length) {
       throw new BadRequestException('You need to send a bill object or a bills array');

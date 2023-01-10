@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 
 import { Request } from 'express';
 
@@ -10,8 +10,13 @@ import { BillModel } from './models/bill.model';
 export class BillsController {
   constructor(private bills: BillsService) {}
 
+  @Get()
+  public async findAll(@Req() req: Request): Promise<BillModel[]> {
+    return this.bills.findAll(req.user.id);
+  }
+
   @Post()
-  public async createBill(@Body() createBillDto: CreateBillDto, @Req() req: Request): Promise<BillModel | BillModel[]> {
+  public async create(@Body() createBillDto: CreateBillDto, @Req() req: Request): Promise<BillModel | BillModel[]> {
     return this.bills.create(req.user.id, createBillDto);
   }
 }
