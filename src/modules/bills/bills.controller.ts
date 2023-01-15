@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
@@ -42,5 +42,10 @@ export class BillsController {
     @Param() param: IdParam,
   ): Promise<void> {
     return this.bills.updatePaidStatus(req.user.id, param.id, updateBillPaidStatusDto);
+  }
+
+  @Delete(':id')
+  public async delete(@Req() req: Request, @Param() param: IdParam): Promise<void> {
+    return this.bills.delete(req.user.id, param.id);
   }
 }

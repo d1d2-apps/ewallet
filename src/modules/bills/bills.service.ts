@@ -52,7 +52,7 @@ export class BillsService {
     const bill = await this.findById(billId);
 
     if (bill.userId !== userId) {
-      throw new BadRequestException("You can't update a bill for another user");
+      throw new BadRequestException("You can't update another user's bill");
     }
 
     const dataToUpdate: Omit<UpdateBillDto, 'billDebtors'> = {
@@ -85,10 +85,20 @@ export class BillsService {
     const bill = await this.findById(billId);
 
     if (bill.userId !== userId) {
-      throw new BadRequestException("You can't update a bill for another user");
+      throw new BadRequestException("You can't update another user's bill");
     }
 
     await this.prisma.bill.update({ where: { id: bill.id }, data });
+  }
+
+  public async delete(userId: string, billId: string): Promise<void> {
+    const bill = await this.findById(billId);
+
+    if (bill.userId !== userId) {
+      throw new BadRequestException("You can't delete another user's bill");
+    }
+
+    await this.prisma.bill.delete({ where: { id: bill.id } });
   }
 
   private async updateBillDebtors(bill: BillModel, billDebtorsToUpdate: UpdateBillDebtorDto[]): Promise<BillDebtorModel[]> {
@@ -121,7 +131,7 @@ export class BillsService {
 
     const debtorsUsersIds = billDebtorsData.filter((debtor) => debtor.userId).map((debtor) => debtor.userId);
     if (debtorsUsersIds.some((id) => id !== userId)) {
-      throw new BadRequestException("You can't register a bill for another user");
+      throw new BadRequestException("You can't register another user's bill");
     }
 
     const billDebtorsIds = billDebtorsData.filter((debtor) => debtor.debtorId).map((debtor) => debtor.debtorId);
