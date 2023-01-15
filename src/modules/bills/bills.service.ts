@@ -9,6 +9,7 @@ import { DebtorsService } from '../users/modules/debtors/debtors.service';
 import { BillDto, CreateBillDto } from './dtos/create-bill.dto';
 import { UpdateBillDebtorDto } from './dtos/update-bill-debtor.dto';
 import { UpdateBillDto } from './dtos/update-bill-dto';
+import { UpdateBillPaidStatusDto } from './dtos/update-paid-status-bill.dto';
 import { BillDebtorModel } from './models/bill-debtor.model';
 import { BillModel } from './models/bill.model';
 
@@ -78,6 +79,16 @@ export class BillsService {
     }
 
     return billInstance;
+  }
+
+  public async updatePaidStatus(userId: string, billId: string, data: UpdateBillPaidStatusDto): Promise<void> {
+    const bill = await this.findById(billId);
+
+    if (bill.userId !== userId) {
+      throw new BadRequestException("You can't update a bill for another user");
+    }
+
+    await this.prisma.bill.update({ where: { id: bill.id }, data });
   }
 
   private async updateBillDebtors(bill: BillModel, billDebtorsToUpdate: UpdateBillDebtorDto[]): Promise<BillDebtorModel[]> {

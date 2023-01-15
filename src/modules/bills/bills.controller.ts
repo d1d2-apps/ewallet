@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
 
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
@@ -6,6 +6,7 @@ import { Request } from 'express';
 import { BillsService } from './bills.service';
 import { CreateBillDto } from './dtos/create-bill.dto';
 import { UpdateBillDto } from './dtos/update-bill-dto';
+import { UpdateBillPaidStatusDto } from './dtos/update-paid-status-bill.dto';
 import { BillModel } from './models/bill.model';
 
 class IdParam {
@@ -32,5 +33,14 @@ export class BillsController {
   @Put(':id')
   public async update(@Body() updateBillDto: UpdateBillDto, @Req() req: Request, @Param() param: IdParam): Promise<BillModel> {
     return this.bills.update(req.user.id, param.id, updateBillDto);
+  }
+
+  @Patch(':id/paid')
+  public async updatedBillPaidStatus(
+    @Body() updateBillPaidStatusDto: UpdateBillPaidStatusDto,
+    @Req() req: Request,
+    @Param() param: IdParam,
+  ): Promise<void> {
+    return this.bills.updatePaidStatus(req.user.id, param.id, updateBillPaidStatusDto);
   }
 }
