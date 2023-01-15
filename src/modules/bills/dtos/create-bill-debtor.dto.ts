@@ -5,13 +5,13 @@ export class CreateBillDebtorDto {
   @IsUUID()
   @IsNotEmpty()
   @IsOptional()
-  debtorId: string;
+  debtorId?: string;
 
   @IsString()
   @IsUUID()
   @IsNotEmpty()
   @IsOptional()
-  userId: string;
+  userId?: string;
 
   @IsNumber()
   @IsNotEmpty()
