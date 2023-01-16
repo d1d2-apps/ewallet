@@ -6,7 +6,9 @@ import request from 'supertest';
 import { AppModule } from '@src/app.module';
 import { AuthService, IAuthResponse } from '@src/modules/auth/auth.service';
 import { CreditCardsService } from '@src/modules/users/modules/credit-cards/credit-cards.service';
+import { CreditCardModel } from '@src/modules/users/modules/credit-cards/models/credit-card.model';
 import { DebtorsService } from '@src/modules/users/modules/debtors/debtors.service';
+import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
 import { PrismaService } from '@src/shared/database/prisma.service';
 import { mockRandomPassword, mockRandomEmail, mockRandomName, mockRandomInvalidToken, mockRandomString } from '@src/utils/tests/mocks.fn';
 
@@ -24,7 +26,11 @@ describe('BillsController (e2e)', () => {
   let billsService: BillsService;
 
   let userAuth: IAuthResponse;
+  let anotherUserAuth: IAuthResponse;
   let userPassword: string;
+  let creditCard: CreditCardModel;
+  let debtor: DebtorModel;
+  let anotherUserDebtor: DebtorModel;
   let bill: BillModel;
 
   beforeAll(async () => {
@@ -53,6 +59,7 @@ describe('BillsController (e2e)', () => {
     creditCardsService = module.get<CreditCardsService>(CreditCardsService);
 
     userPassword = mockRandomPassword();
+
     userAuth = await authService.register({
       email: mockRandomEmail(),
       name: mockRandomName(),
@@ -60,9 +67,18 @@ describe('BillsController (e2e)', () => {
       passwordConfirmation: userPassword,
     });
 
-    const creditCard = await creditCardsService.create(userAuth.user.id, { name: mockRandomName() });
+    anotherUserAuth = await authService.register({
+      email: mockRandomEmail(),
+      name: mockRandomName(),
+      password: userPassword,
+      passwordConfirmation: userPassword,
+    });
 
-    const debtor = await debtorsService.create(userAuth.user.id, { color: '#ffffff', name: mockRandomName() });
+    creditCard = await creditCardsService.create(userAuth.user.id, { name: mockRandomName() });
+
+    debtor = await debtorsService.create(userAuth.user.id, { color: '#ffffff', name: mockRandomName() });
+
+    anotherUserDebtor = await debtorsService.create(anotherUserAuth.user.id, { color: '#ffffff', name: mockRandomName() });
 
     bill = (await billsService.create(userAuth.user.id, {
       bill: {
@@ -72,7 +88,7 @@ describe('BillsController (e2e)', () => {
         description: mockRandomString({ length: 64 }),
         installment: null,
         totalOfInstallments: null,
-        month: new Date().getMonth(),
+        month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
         paid: false,
         totalAmount: 1000,
@@ -117,6 +133,39 @@ describe('BillsController (e2e)', () => {
       expect(response.body[0].id).toStrictEqual(bill.id);
       expect(response.body[0].billDebtors.length).toStrictEqual(bill.billDebtors.length);
     });
+  });
+
+  describe('create', () => {
+    it('should not create bill for unauthenticated user', async () => {
+      const response = await api.post('/bills').expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should not create bill with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.post('/bills').set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it('should raise 400 for incorrect data format', async () => {
+      const response = await api.post('/bills').set('authorization', `Bearer ${userAuth.token}`).send({}).expect(400);
+
+      expect(response.body.message).toStrictEqual('You need to send a bill object or a bills array');
+    });
+
+    // TODO continue CREATE tests
+
+    // it('should create bill from logged user', async () => {
+    //   const response = await api.get('/bills').set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+    //   expect(response.body).toBeTruthy();
+    //   expect(Array.isArray(response.body)).toEqual(true);
+    //   expect(response.body[0].id).toStrictEqual(bill.id);
+    //   expect(response.body[0].billDebtors.length).toStrictEqual(bill.billDebtors.length);
+    // });
   });
 
   afterAll(async () => {
