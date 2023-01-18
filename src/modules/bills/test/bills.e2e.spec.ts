@@ -13,7 +13,9 @@ import { PrismaService } from '@src/shared/database/prisma.service';
 import { mockRandomPassword, mockRandomEmail, mockRandomName, mockRandomInvalidToken, mockRandomString } from '@src/utils/tests/mocks.fn';
 
 import { BillsService } from '../bills.service';
+import { BillDto } from '../dtos/create-bill.dto';
 import { BillCategory, BillModel } from '../models/bill.model';
+import { mockCreateBillNoDataResponse } from './mocks/bills-responses.mock';
 
 describe('BillsController (e2e)', () => {
   let app: INestApplication;
@@ -31,6 +33,7 @@ describe('BillsController (e2e)', () => {
   let creditCard: CreditCardModel;
   let debtor: DebtorModel;
   let anotherUserDebtor: DebtorModel;
+  let baseBill: BillDto;
   let bill: BillModel;
 
   beforeAll(async () => {
@@ -80,34 +83,34 @@ describe('BillsController (e2e)', () => {
 
     anotherUserDebtor = await debtorsService.create(anotherUserAuth.user.id, { color: '#ffffff', name: mockRandomName() });
 
-    bill = (await billsService.create(userAuth.user.id, {
-      bill: {
-        category: BillCategory.EDUCATION,
-        creditCardId: creditCard.id,
-        date: new Date().toISOString(),
-        description: mockRandomString({ length: 64 }),
-        installment: null,
-        totalOfInstallments: null,
-        month: new Date().getMonth() + 1,
-        year: new Date().getFullYear(),
-        paid: false,
-        totalAmount: 1000,
-        billDebtors: [
-          {
-            amount: 500,
-            debtorId: debtor.id,
-            description: mockRandomString({ length: 64 }),
-            paid: false,
-          },
-          {
-            amount: 500,
-            userId: userAuth.user.id,
-            description: mockRandomString({ length: 64 }),
-            paid: false,
-          },
-        ],
-      },
-    })) as BillModel;
+    baseBill = {
+      category: BillCategory.EDUCATION,
+      creditCardId: creditCard.id,
+      date: new Date().toISOString(),
+      description: mockRandomString({ length: 64 }),
+      installment: 0,
+      totalOfInstallments: 0,
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      paid: false,
+      totalAmount: 1000,
+      billDebtors: [
+        {
+          amount: 500,
+          debtorId: debtor.id,
+          description: mockRandomString({ length: 64 }),
+          paid: false,
+        },
+        {
+          amount: 500,
+          userId: userAuth.user.id,
+          description: mockRandomString({ length: 64 }),
+          paid: false,
+        },
+      ],
+    };
+
+    bill = (await billsService.create(userAuth.user.id, { bill: baseBill })) as BillModel;
   });
 
   describe('get all', () => {
@@ -156,16 +159,30 @@ describe('BillsController (e2e)', () => {
       expect(response.body.message).toStrictEqual('You need to send a bill object or a bills array');
     });
 
-    // TODO continue CREATE tests
+    it('should raise 400 for no data', async () => {
+      const response = await api.post('/bills').set('authorization', `Bearer ${userAuth.token}`).send({ bill: {}, bills: {} }).expect(400);
 
-    // it('should create bill from logged user', async () => {
-    //   const response = await api.get('/bills').set('authorization', `Bearer ${userAuth.token}`).expect(200);
+      expect(response.body.message).toStrictEqual(mockCreateBillNoDataResponse);
+    });
 
-    //   expect(response.body).toBeTruthy();
-    //   expect(Array.isArray(response.body)).toEqual(true);
-    //   expect(response.body[0].id).toStrictEqual(bill.id);
-    //   expect(response.body[0].billDebtors.length).toStrictEqual(bill.billDebtors.length);
-    // });
+    it('should create a single bill', async () => {
+      const data = { bill: baseBill };
+
+      const response = await api.post('/bills').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(201);
+
+      expect(response.body.id).toBeTruthy();
+      expect(response.body.category).toEqual(data.bill.category);
+      expect(response.body.creditCardId).toEqual(data.bill.creditCardId);
+      expect(response.body.billDebtors.length).toEqual(data.bill.billDebtors.length);
+    });
+
+    it('should create multiple bills', async () => {
+      const data = { bills: [baseBill, baseBill, baseBill] };
+
+      const response = await api.post('/bills').set('authorization', `Bearer ${userAuth.token}`).send(data).expect(201);
+
+      expect(response.body.length).toEqual(data.bills.length);
+    });
   });
 
   afterAll(async () => {
