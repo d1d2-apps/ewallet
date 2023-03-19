@@ -18,11 +18,15 @@ import { BillModel } from './models/bill.model';
 export class BillsService {
   constructor(private prisma: PrismaService, private creditCards: CreditCardsService, private debtors: DebtorsService) {}
 
-  public async findById(id: string): Promise<BillModel> {
+  public async findById(userId: string, id: string): Promise<BillModel> {
     const bill = await this.prisma.bill.findUnique({ where: { id }, include: { billDebtors: true, creditCard: true } });
 
     if (!bill) {
       throw new NotFoundException(`Bill not found with id [${id}]`);
+    }
+
+    if (bill.userId !== userId) {
+      throw new BadRequestException("You can't access another user's bill data");
     }
 
     return plainToClass(BillModel, bill);
@@ -54,7 +58,7 @@ export class BillsService {
   }
 
   public async update(userId: string, billId: string, data: UpdateBillDto): Promise<BillModel> {
-    const bill = await this.findById(billId);
+    const bill = await this.findById(userId, billId);
 
     if (bill.userId !== userId) {
       throw new BadRequestException("You can't update another user's bill");
@@ -87,7 +91,7 @@ export class BillsService {
   }
 
   public async updatePaidStatus(userId: string, billId: string, data: UpdateBillPaidStatusDto): Promise<void> {
-    const bill = await this.findById(billId);
+    const bill = await this.findById(userId, billId);
 
     if (bill.userId !== userId) {
       throw new BadRequestException("You can't update another user's bill");
@@ -97,7 +101,7 @@ export class BillsService {
   }
 
   public async delete(userId: string, billId: string): Promise<void> {
-    const bill = await this.findById(billId);
+    const bill = await this.findById(userId, billId);
 
     if (bill.userId !== userId) {
       throw new BadRequestException("You can't delete another user's bill");

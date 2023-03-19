@@ -42,6 +42,7 @@ describe('BillsController (e2e)', () => {
   let anotherUserDebtor: DebtorModel;
   let baseBill: BillDto;
   let bill: BillModel;
+  let anotherUserBill: BillModel;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -118,6 +119,26 @@ describe('BillsController (e2e)', () => {
     };
 
     bill = (await billsService.create(userAuth.user.id, { bill: baseBill })) as BillModel;
+
+    anotherUserBill = (await billsService.create(anotherUserAuth.user.id, {
+      bill: {
+        ...baseBill,
+        billDebtors: [
+          {
+            amount: 500,
+            debtorId: debtor.id,
+            description: mockRandomString({ length: 64 }),
+            paid: false,
+          },
+          {
+            amount: 500,
+            userId: anotherUserAuth.user.id,
+            description: mockRandomString({ length: 64 }),
+            paid: false,
+          },
+        ],
+      },
+    })) as BillModel;
   });
 
   describe('get all', () => {
@@ -169,6 +190,34 @@ describe('BillsController (e2e)', () => {
     });
   });
 
+  describe('get by id', () => {
+    it('should not get all bills for unauthenticated user', async () => {
+      const response = await api.get(`/bills/${bill.id}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should not get all bills with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.get(`/bills/${bill.id}`).set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it("should not get another user's bill data", async () => {
+      const response = await api.get(`/bills/${anotherUserBill.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(400);
+
+      expect(response.body.message).toEqual("You can't access another user's bill data");
+    });
+
+    it('should get bill data', async () => {
+      const response = await api.get(`/bills/${bill.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      expect(response.body.id).toBeTruthy();
+    });
+  });
+
   describe('create', () => {
     it('should not create bill for unauthenticated user', async () => {
       const response = await api.post('/bills').expect(401);
@@ -215,6 +264,11 @@ describe('BillsController (e2e)', () => {
       expect(response.body.length).toEqual(data.bills.length);
     });
   });
+
+  // TODO the following endpoint tests
+  // @Put(':id')
+  // @Patch(':id/paid')
+  // @Delete(':id')
 
   afterAll(async () => {
     await app.close();

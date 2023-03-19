@@ -26,6 +26,11 @@ export class BillsController {
     return this.bills.findAll(req.user.id, query);
   }
 
+  @Get(':id')
+  public async findById(@Req() req: Request, @Param() param: IdParam): Promise<BillModel> {
+    return this.bills.findById(req.user.id, param.id);
+  }
+
   @Post()
   public async create(@Body() createBillDto: CreateBillDto, @Req() req: Request): Promise<BillModel | BillModel[]> {
     return this.bills.create(req.user.id, createBillDto);
