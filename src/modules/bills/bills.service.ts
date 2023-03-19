@@ -7,6 +7,7 @@ import { PrismaService } from '@src/shared/database/prisma.service';
 import { CreditCardsService } from '../users/modules/credit-cards/credit-cards.service';
 import { DebtorsService } from '../users/modules/debtors/debtors.service';
 import { BillDto, CreateBillDto } from './dtos/create-bill.dto';
+import { FindBillsQueryDto } from './dtos/find-bills-query.dto';
 import { UpdateBillDebtorDto } from './dtos/update-bill-debtor.dto';
 import { UpdateBillDto } from './dtos/update-bill-dto';
 import { UpdateBillPaidStatusDto } from './dtos/update-paid-status-bill.dto';
@@ -27,8 +28,12 @@ export class BillsService {
     return plainToClass(BillModel, bill);
   }
 
-  public async findAll(userId: string): Promise<BillModel[]> {
-    const bills = await this.prisma.bill.findMany({ where: { userId }, include: { billDebtors: true, creditCard: true }, orderBy: { date: 'desc' } });
+  public async findAll(userId: string, { creditCardId, month, year }: FindBillsQueryDto): Promise<BillModel[]> {
+    const bills = await this.prisma.bill.findMany({
+      where: { userId, creditCardId, year, month },
+      include: { billDebtors: true, creditCard: true },
+      orderBy: { date: 'desc' },
+    });
 
     return plainToInstance(BillModel, bills);
   }

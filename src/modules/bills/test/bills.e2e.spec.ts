@@ -10,12 +10,19 @@ import { CreditCardModel } from '@src/modules/users/modules/credit-cards/models/
 import { DebtorsService } from '@src/modules/users/modules/debtors/debtors.service';
 import { DebtorModel } from '@src/modules/users/modules/debtors/models/debtor.model';
 import { PrismaService } from '@src/shared/database/prisma.service';
-import { mockRandomPassword, mockRandomEmail, mockRandomName, mockRandomInvalidToken, mockRandomString } from '@src/utils/tests/mocks.fn';
+import {
+  mockRandomPassword,
+  mockRandomEmail,
+  mockRandomName,
+  mockRandomInvalidToken,
+  mockRandomString,
+  mockRandomUuid,
+} from '@src/utils/tests/mocks.fn';
 
 import { BillsService } from '../bills.service';
 import { BillDto } from '../dtos/create-bill.dto';
 import { BillCategory, BillModel } from '../models/bill.model';
-import { mockCreateBillNoDataResponse } from './mocks/bills-responses.mock';
+import { mockCreateBillNoDataResponse, mockFindBillsInvalidQueryFormat } from './mocks/bills-responses.mock';
 
 describe('BillsController (e2e)', () => {
   let app: INestApplication;
@@ -128,6 +135,16 @@ describe('BillsController (e2e)', () => {
       expect(response.body.message).toStrictEqual('Invalid JWT token');
     });
 
+    it('should raise 400 for invalid query format', async () => {
+      const response = await api
+        .get('/bills')
+        .query({ year: 'year', month: 'month', creditCardId: 'not-uuid' })
+        .set('authorization', `Bearer ${userAuth.token}`)
+        .expect(400);
+
+      expect(response.body.message).toStrictEqual(mockFindBillsInvalidQueryFormat);
+    });
+
     it('should get all bills from logged user', async () => {
       const response = await api.get('/bills').set('authorization', `Bearer ${userAuth.token}`).expect(200);
 
@@ -135,6 +152,20 @@ describe('BillsController (e2e)', () => {
       expect(Array.isArray(response.body)).toEqual(true);
       expect(response.body[0].id).toStrictEqual(bill.id);
       expect(response.body[0].billDebtors.length).toStrictEqual(bill.billDebtors.length);
+    });
+
+    it('should get nothing for not existing credit card id', async () => {
+      const response = await api.get('/bills').query({ creditCardId: mockRandomUuid() }).set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      expect(response.body.length).toEqual(0);
+    });
+
+    it('should get all bills from existing credit card', async () => {
+      const response = await api.get('/bills').query({ creditCardId: creditCard.id }).set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      expect(response.body).toBeTruthy();
+      expect(Array.isArray(response.body)).toEqual(true);
+      expect(response.body.every((bill: BillModel) => bill.creditCardId === creditCard.id)).toEqual(true);
     });
   });
 

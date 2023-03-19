@@ -1,3 +1,9 @@
+export const mockFindBillsInvalidQueryFormat = [
+  'year must be a number conforming to the specified constraints',
+  'month must be a number conforming to the specified constraints',
+  'creditCardId must be a UUID',
+];
+
 export const mockCreateBillNoDataResponse = [
   'bill.creditCardId should not be empty',
   'bill.creditCardId must be a string',

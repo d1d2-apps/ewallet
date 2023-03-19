@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
 
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { Request } from 'express';
 
 import { BillsService } from './bills.service';
 import { CreateBillDto } from './dtos/create-bill.dto';
+import { FindBillsQueryDto } from './dtos/find-bills-query.dto';
 import { UpdateBillDto } from './dtos/update-bill-dto';
 import { UpdateBillPaidStatusDto } from './dtos/update-paid-status-bill.dto';
 import { BillModel } from './models/bill.model';
@@ -21,8 +22,8 @@ export class BillsController {
   constructor(private bills: BillsService) {}
 
   @Get()
-  public async findAll(@Req() req: Request): Promise<BillModel[]> {
-    return this.bills.findAll(req.user.id);
+  public async findAll(@Req() req: Request, @Query() query: FindBillsQueryDto): Promise<BillModel[]> {
+    return this.bills.findAll(req.user.id, query);
   }
 
   @Post()
