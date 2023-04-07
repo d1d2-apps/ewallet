@@ -26,7 +26,7 @@ export class BillsService {
     }
 
     if (bill.userId !== userId) {
-      throw new BadRequestException("You can't access another user's bill data");
+      throw new BadRequestException("You can't access another user's bill");
     }
 
     return plainToClass(BillModel, bill);
@@ -85,6 +85,8 @@ export class BillsService {
       const updatedBillDebtors = await this.updateBillDebtors(bill, data.billDebtors);
 
       billInstance.billDebtors = plainToInstance(BillDebtorModel, updatedBillDebtors);
+    } else {
+      billInstance.billDebtors = plainToInstance(BillDebtorModel, bill.billDebtors);
     }
 
     return billInstance;
@@ -101,7 +103,7 @@ export class BillsService {
   }
 
   public async delete(userId: string, billId: string): Promise<void> {
-    const bill = await this.prisma.bill.findUnique({ where: { id: billId } });
+    const bill = await this.findById(userId, billId);
 
     if (bill.userId !== userId) {
       throw new BadRequestException("You can't delete another user's bill");
@@ -111,24 +113,22 @@ export class BillsService {
   }
 
   private async updateBillDebtors(bill: BillModel, billDebtorsToUpdate: UpdateBillDebtorDto[]): Promise<BillDebtorModel[]> {
-    const currentBillDebtorsIds = bill.billDebtors.map((billDebtor) => billDebtor.debtorId);
+    await this.prisma.billDebtor.deleteMany({ where: { billId: bill.id } });
 
-    const billDebtorsIdsToUpdate = billDebtorsToUpdate.map((billDebtor) => billDebtor.debtorId);
-
-    const billDebtorsToDelete = currentBillDebtorsIds.filter((billDebtorId) => !billDebtorsIdsToUpdate.includes(billDebtorId));
-
-    const deleteBillDebtorsPromises = billDebtorsToDelete.map((billDebtorId) => {
-      const billDebtor = bill.billDebtors.find((billDeb) => billDeb.debtorId === billDebtorId);
-      return this.prisma.billDebtor.delete({ where: { id: billDebtor.id } });
-    });
-
-    await Promise.all(deleteBillDebtorsPromises);
-
-    const updateBillDebtorsPromises = billDebtorsToUpdate.map((billDebtor) =>
-      this.prisma.billDebtor.update({ where: { id: billDebtor.id }, data: billDebtor }),
+    const updateBillDebtrsPromises = billDebtorsToUpdate.map((debtor) =>
+      this.prisma.billDebtor.create({
+        data: {
+          billId: bill.id,
+          userId: bill.userId,
+          debtorId: debtor.debtorId,
+          amount: debtor.amount,
+          description: debtor.description,
+          paid: debtor.paid,
+        },
+      }),
     );
 
-    const updatedBillDebtors = await Promise.all(updateBillDebtorsPromises);
+    const updatedBillDebtors = await Promise.all(updateBillDebtrsPromises);
 
     return updatedBillDebtors;
   }

@@ -58,3 +58,5 @@ export const mockCreateBillNoDataResponse = [
   'bills.billDebtors should not be null or undefined',
   'bills.billDebtors must be an array',
 ];
+
+export const mockUpdateBillNoDataResponse = ['billDebtors should not be null or undefined', 'billDebtors must be an array'];

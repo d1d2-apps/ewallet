@@ -4,11 +4,6 @@ export class UpdateBillDebtorDto {
   @IsString()
   @IsUUID()
   @IsNotEmpty()
-  id: string;
-
-  @IsString()
-  @IsUUID()
-  @IsNotEmpty()
   @IsOptional()
   debtorId: string;
 

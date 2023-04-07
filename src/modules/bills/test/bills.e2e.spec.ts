@@ -22,7 +22,7 @@ import {
 import { BillsService } from '../bills.service';
 import { BillDto } from '../dtos/create-bill.dto';
 import { BillCategory, BillModel } from '../models/bill.model';
-import { mockCreateBillNoDataResponse, mockFindBillsInvalidQueryFormat } from './mocks/bills-responses.mock';
+import { mockCreateBillNoDataResponse, mockFindBillsInvalidQueryFormat, mockUpdateBillNoDataResponse } from './mocks/bills-responses.mock';
 
 describe('BillsController (e2e)', () => {
   let app: INestApplication;
@@ -208,7 +208,7 @@ describe('BillsController (e2e)', () => {
     it("should not get another user's bill data", async () => {
       const response = await api.get(`/bills/${anotherUserBill.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(400);
 
-      expect(response.body.message).toEqual("You can't access another user's bill data");
+      expect(response.body.message).toEqual("You can't access another user's bill");
     });
 
     it('should get bill data', async () => {
@@ -288,22 +288,89 @@ describe('BillsController (e2e)', () => {
     it("should not delete another user's bill", async () => {
       const response = await api.delete(`/bills/${anotherUserBill.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(400);
 
-      expect(response.body.message).toEqual("You can't delete another user's bill");
+      expect(response.body.message).toEqual("You can't access another user's bill");
     });
 
     it('should delete bill', async () => {
       await api.delete(`/bills/${billToDelete.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(200);
 
-      const bill = await billsService.findById(userAuth.user.id, billToDelete.id).catch((error) => {
+      const deletedBill = await billsService.findById(userAuth.user.id, billToDelete.id).catch((error) => {
         expect(error.message).toStrictEqual(`Bill not found with id [${billToDelete.id}]`);
       });
 
-      expect(bill).not.toBeDefined();
+      expect(deletedBill).not.toBeDefined();
+    });
+  });
+
+  describe('update', () => {
+    it('should not update bill for unauthenticated user', async () => {
+      const response = await api.put(`/bills/${bill.id}`).send({});
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should not update bill with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.put(`/bills/${bill.id}`).set('authorization', `Bearer ${invalidToken}`).send({}).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it("should not update another user's bill", async () => {
+      const response = await api
+        .put(`/bills/${anotherUserBill.id}`)
+        .set('authorization', `Bearer ${userAuth.token}`)
+        .send({ billDebtors: [] })
+        .expect(400);
+
+      expect(response.body.message).toEqual("You can't access another user's bill");
+    });
+
+    it("should not update another user's bill", async () => {
+      const response = await api.put(`/bills/${bill.id}`).set('authorization', `Bearer ${userAuth.token}`).send({}).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockUpdateBillNoDataResponse);
+    });
+
+    it('should update bill data but not the bill debtors', async () => {
+      const data = {
+        category: BillCategory.TRAVEL,
+        billDebtors: [],
+      };
+
+      const response = await api.put(`/bills/${bill.id}`).set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
+
+      expect(response.body.category).toEqual(BillCategory.TRAVEL);
+      expect(response.body.billDebtors.length).toEqual(bill.billDebtors.length);
+      expect(response.body.billDebtors.length).not.toEqual(data.billDebtors);
+    });
+
+    it('should update bill debtors', async () => {
+      const data = {
+        category: BillCategory.TRAVEL,
+        totalAmount: 1500,
+        billDebtors: [
+          {
+            id: bill.billDebtors[0].id,
+            amount: 1500,
+            userId: userAuth.user.id,
+            description: mockRandomString({ length: 64 }),
+            paid: false,
+          },
+        ],
+      };
+
+      const response = await api.put(`/bills/${bill.id}`).set('authorization', `Bearer ${userAuth.token}`).send(data).expect(200);
+
+      expect(response.body.category).toEqual(BillCategory.TRAVEL);
+      expect(response.body.totalAmount).toEqual(data.totalAmount);
+      expect(response.body.billDebtors.length).toEqual(data.billDebtors.length);
+      expect(response.body.billDebtors[0].amount).toEqual(data.billDebtors[0].amount);
     });
   });
 
   // TODO the following endpoint tests
-  // @Put(':id')
   // @Patch(':id/paid')
 
   afterAll(async () => {
