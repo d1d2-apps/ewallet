@@ -21,6 +21,8 @@ model User {
   resetPasswordTokens ResetPasswordToken[]
   debtors             Debtor[]
   creditCards         CreditCard[]
+  bills               Bill[]
+  billDebtors         BillDebtor[]
 
   @@map("users")
 }
@@ -37,13 +39,14 @@ model ResetPasswordToken {
 }
 
 model Debtor {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId    String   @db.Uuid
-  color     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  user        User?        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId      String       @db.Uuid
+  color       String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  billDebtors BillDebtor[]
 
   @@map("debtors")
 }
@@ -55,6 +58,59 @@ model CreditCard {
   userId    String   @db.Uuid
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  bills     Bill[]
 
   @@map("credit_cards")
+}
+
+model Bill {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creditCard          CreditCard?  @relation(fields: [creditCardId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  creditCardId        String       @db.Uuid
+  user                User?        @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId              String       @db.Uuid
+  month               Int
+  year                Int
+  date                DateTime
+  totalAmount         Int
+  installment         Int?
+  totalOfInstallments Int?
+  description         String?
+  paid                Boolean      @default(false)
+  category            BillCategory @default(OTHERS)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @default(now()) @updatedAt
+  billDebtors         BillDebtor[]
+
+  @@map("bills")
+}
+
+enum BillCategory {
+  HOUSE
+  EDUCATION
+  ELECTRONICS
+  LEISURE
+  OTHERS
+  RESTAURANT
+  HEALTH
+  SERVICES
+  SUPERMARKET
+  TRANSPORT
+  CLOTHING
+  TRAVEL
+}
+
+model BillDebtor {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bill        Bill?   @relation(fields: [billId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  billId      String  @db.Uuid
+  user        User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId      String? @db.Uuid
+  debtor      Debtor? @relation(fields: [debtorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  debtorId    String? @db.Uuid
+  amount      Int
+  description String?
+  paid        Boolean @default(false)
+
+  @@map("bill_debtors")
 }
