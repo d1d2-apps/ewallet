@@ -22,7 +22,12 @@ import {
 import { BillsService } from '../bills.service';
 import { BillDto } from '../dtos/create-bill.dto';
 import { BillCategory, BillModel } from '../models/bill.model';
-import { mockCreateBillNoDataResponse, mockFindBillsInvalidQueryFormat, mockUpdateBillNoDataResponse } from './mocks/bills-responses.mock';
+import {
+  mockCreateBillNoDataResponse,
+  mockFindBillsInvalidQueryFormat,
+  mockUpdateBillNoDataResponse,
+  mockUpdateBillPaidNoDataResponse,
+} from './mocks/bills-responses.mock';
 
 describe('BillsController (e2e)', () => {
   let app: INestApplication;
@@ -39,7 +44,6 @@ describe('BillsController (e2e)', () => {
   let userPassword: string;
   let creditCard: CreditCardModel;
   let debtor: DebtorModel;
-  let anotherUserDebtor: DebtorModel;
   let baseBill: BillDto;
   let bill: BillModel;
   let anotherUserBill: BillModel;
@@ -88,8 +92,6 @@ describe('BillsController (e2e)', () => {
     creditCard = await creditCardsService.create(userAuth.user.id, { name: mockRandomName() });
 
     debtor = await debtorsService.create(userAuth.user.id, { color: '#ffffff', name: mockRandomName() });
-
-    anotherUserDebtor = await debtorsService.create(anotherUserAuth.user.id, { color: '#ffffff', name: mockRandomName() });
 
     baseBill = {
       category: BillCategory.EDUCATION,
@@ -370,8 +372,45 @@ describe('BillsController (e2e)', () => {
     });
   });
 
-  // TODO the following endpoint tests
-  // @Patch(':id/paid')
+  describe('update paid status', () => {
+    it("should not update bill's paid status for unauthenticated user", async () => {
+      const response = await api.patch(`/bills/${bill.id}/paid`).send({ paid: true });
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it("should not update bill's paid status with invalid JWT token", async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.patch(`/bills/${bill.id}/paid`).set('authorization', `Bearer ${invalidToken}`).send({ paid: true }).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it("should not update bill's paid status for no data", async () => {
+      const response = await api.patch(`/bills/${bill.id}/paid`).set('authorization', `Bearer ${userAuth.token}`).send(undefined).expect(400);
+
+      expect(response.body.message).toStrictEqual(mockUpdateBillPaidNoDataResponse);
+    });
+
+    it("should not update another user's bill's paid status", async () => {
+      const response = await api
+        .patch(`/bills/${anotherUserBill.id}/paid`)
+        .set('authorization', `Bearer ${userAuth.token}`)
+        .send({ paid: true })
+        .expect(400);
+
+      expect(response.body.message).toEqual("You can't access another user's bill");
+    });
+
+    it("should update bill's paid status", async () => {
+      await api.patch(`/bills/${bill.id}/paid`).set('authorization', `Bearer ${userAuth.token}`).send({ paid: true }).expect(200);
+
+      const updatedBill = await prisma.bill.findUnique({ where: { id: bill.id } });
+
+      expect(updatedBill.paid).toEqual(true);
+    });
+  });
 
   afterAll(async () => {
     await app.close();
