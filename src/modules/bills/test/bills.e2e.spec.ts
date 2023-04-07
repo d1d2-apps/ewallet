@@ -265,10 +265,46 @@ describe('BillsController (e2e)', () => {
     });
   });
 
+  describe('delete', () => {
+    let billToDelete: BillModel;
+    beforeEach(async () => {
+      billToDelete = (await billsService.create(userAuth.user.id, { bill: baseBill })) as BillModel;
+    });
+
+    it('should not delete bill for unauthenticated user', async () => {
+      const response = await api.delete(`/bills/${billToDelete.id}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('JWT token is missing');
+    });
+
+    it('should not delete bill with invalid JWT token', async () => {
+      const invalidToken = mockRandomInvalidToken();
+
+      const response = await api.delete(`/bills/${billToDelete.id}`).set('authorization', `Bearer ${invalidToken}`).expect(401);
+
+      expect(response.body.message).toStrictEqual('Invalid JWT token');
+    });
+
+    it("should not delete another user's bill", async () => {
+      const response = await api.delete(`/bills/${anotherUserBill.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(400);
+
+      expect(response.body.message).toEqual("You can't delete another user's bill");
+    });
+
+    it('should delete bill', async () => {
+      await api.delete(`/bills/${billToDelete.id}`).set('authorization', `Bearer ${userAuth.token}`).expect(200);
+
+      const bill = await billsService.findById(userAuth.user.id, billToDelete.id).catch((error) => {
+        expect(error.message).toStrictEqual(`Bill not found with id [${billToDelete.id}]`);
+      });
+
+      expect(bill).not.toBeDefined();
+    });
+  });
+
   // TODO the following endpoint tests
   // @Put(':id')
   // @Patch(':id/paid')
-  // @Delete(':id')
 
   afterAll(async () => {
     await app.close();

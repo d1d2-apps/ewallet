@@ -101,7 +101,7 @@ export class BillsService {
   }
 
   public async delete(userId: string, billId: string): Promise<void> {
-    const bill = await this.findById(userId, billId);
+    const bill = await this.prisma.bill.findUnique({ where: { id: billId } });
 
     if (bill.userId !== userId) {
       throw new BadRequestException("You can't delete another user's bill");
