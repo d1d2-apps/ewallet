@@ -17,7 +17,7 @@ async function bootstrap() {
     }),
   );
 
-  const whitelist = ['http://localhost:5173', 'http://192.168.1.114:5173'];
+  const whitelist = ['http://localhost:5173', 'http://192.168.1.114:5173', 'http://192.168.1.239'];
 
   app.enableCors({
     credentials: true,
